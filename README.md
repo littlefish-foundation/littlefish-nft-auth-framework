@@ -1,39 +1,42 @@
-# My React Boilerplate
+# littlefish-nft-futh-framework
 
-My React Boilerplate is a collection of reusable components, context providers, and hooks for building React applications.
+littlefish-nft-futh-framework is a collection of reusable components, context providers, and hooks for building React applications.
 
 ## Installation
 
-You can install My React Boilerplate via NPM:
+You can install littlefish-nft-futh-framework via NPM:
 
 ```bash
-npm install littlefish-boilerplate
+npm install littlefish-nft-futh-framework
 ```
 
 ## Usage
 
 ### Components
 
-Import components from `littlefish-boilerplate/components`:
+Import components from `littlefish-nft-futh-framework/dist/components`:
 
 ```jsx
-import { Button, Card } from 'littlefish-boilerplate';
+import { Button, Card } from 'littlefish-nft-futh-framework';
 ```
 
 ### Context Providers
-Import context providers from littlefish-boilerplate/contexts:
+```jsx
+Import context providers from 'littlefish-nft-futh-framework/contexts';
+```
+
 
 ```jsx
-import { WalletContext } from 'littlefish-boilerplate';
+import { WalletContext } from 'littlefish-nft-futh-framework';
 ```
 Wrap your app with the context provider:
 ```jsx
-<WalletContext>
+<WalletProvider>
   <App />
-</WalletContext>
+</WalletProvider>
 ```
 ### Configuration
 For external APIs and environment variables, ensure to set them in your project:
 ```jsx
-BLOCKFROST_API_KEY=your-api-key
+littlefish-nft-futh-framework=your-api-key // Blockfrost API Key.
 ```

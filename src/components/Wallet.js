@@ -11,7 +11,7 @@ function classNames(...classes) {
 
 function Wallet() {
   const { isConnected, connectWallet, disconnectWallet, accountBalance, stakeAddress } = useWallet();
-  const installedWallets = getInstalledWallets(); // Assume this is provided
+  const installedWallets = getInstalledWallets();
 
   return (
     !isConnected ? 
