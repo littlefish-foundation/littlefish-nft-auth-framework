@@ -1,5 +1,5 @@
 {
-  "name": "littlefish-nft-futh-framework",
+  "name": "littlefish-nft-auth-framework",
   "version": "0.1.0",
   "description": "Open Source NFT & Wallet Auth Framework for Cardano",
   "main": "/dist/index.js",
