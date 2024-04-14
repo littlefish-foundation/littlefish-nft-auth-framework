@@ -11,8 +11,11 @@
     "lint": "eslint 'src/**/*.{js,jsx}'"
   },
   "babel": {
-    "presets": ["@babel/preset-env", "@babel/preset-react"]
-},
+    "presets": [
+      "@babel/preset-env",
+      "@babel/preset-react"
+    ]
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/littlefish-foundation/littlefish-nft-futh-framework"
@@ -36,6 +39,9 @@
     "react-scripts": "5.0.1"
   },
   "devDependencies": {
+    "@babel/cli": "^7.24.1",
+    "@babel/core": "^7.24.4",
+    "@babel/preset-env": "^7.24.4",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",

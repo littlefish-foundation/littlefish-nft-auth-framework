@@ -12,19 +12,10 @@ npm install littlefish-nft-auth-framework
 
 ## Usage
 
-### Components
-
-Import components from `littlefish-nft-auth-framework/dist/components`:
-
-```jsx
-import { Button, Card } from 'littlefish-nft-auth-framework';
-```
-
 ### Context Providers
 ```jsx
 Import context providers from 'littlefish-nft-auth-framework/contexts';
 ```
-
 
 ```jsx
 import { WalletContext } from 'littlefish-nft-auth-framework';
@@ -34,9 +25,4 @@ Wrap your app with the context provider:
 <WalletProvider>
   <App />
 </WalletProvider>
-```
-### Configuration
-For external APIs and environment variables, ensure to set them in your project:
-```jsx
-littlefish-nft-auth-framework=your-api-key // Blockfrost API Key.
 ```

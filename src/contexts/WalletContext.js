@@ -1,104 +1,137 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
-import { useCardano } from "@cardano-foundation/cardano-connect-with-wallet";
-import { GetAssets } from "../components/GetAssets";
+import React, { useState, useContext, createContext, useCallback, useEffect } from "react";
+import cbor from "cbor-js";
 
 const WalletContext = createContext(null);
 
 export const useWallet = () => useContext(WalletContext);
 
-export const WalletProvider = ({
-    children,
-    onConnect = () => { },
-    onDisconnect = () => { },
-    onFetchAssetsStart = () => { },
-    onFetchAssetsSuccess = () => { },
-    onFetchAssetsError = (error) => { },
-}) => {
-    const {
-        isConnected,
-        connect,
-        disconnect,
-        enabledWallet,
-        stakeAddress,
-        signMessage,
-        usedAddresses,
-        unusedAddresses,
-        accountBalance,
-    } = useCardano();
-
+export const WalletProvider = ({ children }) => {
+    const [isConnected, setIsConnected] = useState(false);
+    const [wallets, setWallets] = useState([]);
+    const [connectedWalletId, setConnectedWalletId] = useState(null);
+    const [utxos, setUtxos] = useState([]);
     const [assets, setAssets] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
 
-    const connectWallet = useCallback(async (walletName) => {
-        try {
-            await connect(walletName);
-            onConnect();
-        } catch (err) {
-            console.error("Error connecting wallet:", err);
-        }
-    }, [connect, onConnect]);
+    useEffect(() => {
+      console.log("Updated Assets:", assets);
+    }, [assets]);
 
-    const disconnectWallet = useCallback(async () => {
-        try {
-            await disconnect();
-            onDisconnect();
-        } catch (err) {
-            console.error("Error disconnecting wallet:", err);
-        }
-    }, [disconnect, onDisconnect]);
+    const expectedWallets = [
+      "nami",
+      "eternl",
+      "yoroi",
+      "flint",
+      "typhon",
+      "gerowallet",
+      "nufi",
+      "lace",
+    ];
 
-    const fetchAssets = useCallback(async (address) => {
-        onFetchAssetsStart();
-        setLoading(true);
-        setError("");
-        try {
-            if (typeof address === "string" && address.trim() !== "") {
-                const assetsArray = await GetAssets(address);
-                const transformedAssets = assetsArray.flatMap((asset) =>
-                    asset.amount.map((amt) => ({
-                        unit: amt.unit,
-                        quantity: amt.quantity,
-                    }))
-                );
-                setAssets(transformedAssets);
-                onFetchAssetsSuccess(transformedAssets);
-            } else {
-                const errorMessage = "Invalid address";
-                onFetchAssetsError(errorMessage);
-                throw new Error(errorMessage);
+    const assetDecoder = (hexDataArray) => {
+        let results = [];
+    
+        hexDataArray.forEach((hexData) => {
+          const bytes = new Uint8Array(
+            hexData.match(/[\da-f]{2}/gi).map((h) => parseInt(h, 16))
+          );
+          const decoded = cbor.decode(bytes.buffer);
+    
+          decoded.forEach((utxo) => {
+            if (
+              Array.isArray(utxo) &&
+              utxo.length === 2 &&
+              Array.isArray(utxo[1])
+            ) {
+              const [binaryData, details] = utxo;
+              const [amount, assets] = details;
+              let assetResults = [];
+              Object.entries(assets).forEach(([key, val]) => {
+                if (typeof key === "string") {
+                  key = new Uint8Array(key.split(",").map(Number));
+                }
+                const keyHex = byteArrayToHex(key);
+                let assetDetail = [keyHex];
+                let details = [];
+                Object.entries(val).forEach(
+                  ([innerKey, innerVal], index, array) => {
+                    if (typeof innerKey === "string") {
+                      innerKey = new Uint8Array(innerKey.split(",").map(Number));
+                    }
+                    const innerKeyHex = byteArrayToHex(innerKey);
+                    //console.log(innerKeyHex, innerVal);
+                    assetDetail.push(innerKeyHex, innerVal);
+                    //console.log(assetDetail);
+                });
+                assetResults.push(assetDetail);
+                assetResults = assetResults.flat();
+                //console.log(assetResults);
+              });
+              results.push(assetResults);
+              //results = results.flat();
+              //console.log(results)
             }
-        } catch (err) {
-            console.error("Error fetching assets:", err);
-            setError("Failed to fetch assets");
-            setAssets([]);
-            onFetchAssetsError("Failed to fetch assets");
-        } finally {
-            setLoading(false);
-        }
+          });
+        });
+    
+        setAssets(results);
+        console.log(results)
+        return results;
+      };
+    
+      const byteArrayToHex = (buffer) => {
+        return Array.from(buffer, (byte) =>
+          byte.toString(16).padStart(2, "0")
+        ).join("");
+      };
+    
+
+    const getWallets = useCallback(() => {
+      if (typeof window.cardano !== "undefined") {
+        const installedWallets = Object.keys(window.cardano);
+        console.log(installedWallets);
+        setWallets(
+          expectedWallets.filter((wallet) => installedWallets.includes(wallet))
+        );
+      }
+    }, [expectedWallets]);
+
+    const connectWallet = useCallback((walletName) => {
+      console.log(`Attempting to connect to wallet: ${walletName}`);
+      if (typeof window.cardano !== "undefined" && window.cardano[walletName]) {
+        window.cardano[walletName].enable({ extensions: [] })
+          .then((api) => {
+            console.log("Wallet enabled", api);
+            setIsConnected(true);
+            setConnectedWalletId(walletName);
+            
+            api.getUtxos().then((utxoData) => {
+              const decoded = assetDecoder(utxoData);
+              console.log(decoded);
+              setAssets(decoded);
+              console.log(assets);
+            }).catch((error) => {
+              console.error("Failed to get UTXO data", error);
+            });
+          })
+          .catch((error) => {
+            console.error("Failed to enable the wallet", error);
+          });
+      } else {
+        console.error("Wallet not found or cardano object not available");
+      }
+    }, []);
+    
+
+    const disconnectWallet = useCallback(() => {
+      console.log("Disconnecting wallet...");
+      setIsConnected(false);
+      setConnectedWalletId(null);  // Clear the connected wallet ID upon disconnect
     }, []);
 
     return (
-        <WalletContext.Provider
-            value={{
-                connectWallet,
-                disconnectWallet,
-                fetchAssets,
-                isConnected,
-                enabledWallet,
-                stakeAddress,
-                usedAddresses,
-                unusedAddresses,
-                connect,
-                disconnect,
-                accountBalance,
-                assets,
-                loading,
-                error,
-                signMessage,
-            }}
-        >
-            {children}
-        </WalletContext.Provider>
+      <WalletContext.Provider value={{ isConnected, assets, connectedWalletId, assetDecoder, connectWallet, disconnectWallet, getWallets,
+       wallets }}>
+        {children}
+      </WalletContext.Provider>
     );
-};
+  };
