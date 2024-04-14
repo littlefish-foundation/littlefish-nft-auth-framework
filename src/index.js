@@ -1,2 +1,2 @@
 // Exporting React context and hooks
-export { WalletProvider, useWallet } from './providers/WalletContext';
+export { WalletProvider, useWallet } from './contexts/WalletContext.js';
