@@ -6,6 +6,7 @@ const WalletContext = createContext(null);
 export const useWallet = () => useContext(WalletContext);
 
 export const WalletProvider = ({ children }) => {
+  const [isClient, setIsClient] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [wallets, setWallets] = useState([]);
   const [connectedWalletId, setConnectedWalletId] = useState(null);
@@ -13,8 +14,11 @@ export const WalletProvider = ({ children }) => {
   const [assets, setAssets] = useState([]);
 
   useEffect(() => {
-    getWallets();
-  }, [assets]);
+    setIsClient(typeof window !== "undefined");
+    if (isClient) {
+      getWallets();
+    }
+  }, [isClient, assets]);
 
   const expectedWallets = [
     "nami",
@@ -104,76 +108,78 @@ export const WalletProvider = ({ children }) => {
   function processAssets(inputArray) {
     const results = [];
     inputArray.forEach(row => {
-        if (row.length === 3) {
-            results.push(row);
-        } else {
-            // Extended processing for longer rows
-            let policyID = row[0]; // Initial policy ID
-            let i = 1;             // Start from the second element
-            while (i < row.length) {
-                if (row[i].length === 56 && i + 2 < row.length) {
-                    // New policy ID found and there are at least two more items (name and amount)
-                    policyID = row[i];
-                    i++;
-                }
-                if (i + 1 < row.length) {
-                    results.push([policyID, row[i], row[i+1]]);
-                    i += 2;  // Move to the next potential asset name
-                } else {
-                    // If there's a hanging element without a pair, break the loop
-                    break;
-                }
-            }
+      if (row.length === 3) {
+        results.push(row);
+      } else {
+        // Extended processing for longer rows
+        let policyID = row[0]; // Initial policy ID
+        let i = 1;             // Start from the second element
+        while (i < row.length) {
+          if (row[i].length === 56 && i + 2 < row.length) {
+            // New policy ID found and there are at least two more items (name and amount)
+            policyID = row[i];
+            i++;
+          }
+          if (i + 1 < row.length) {
+            results.push([policyID, row[i], row[i + 1]]);
+            i += 2;  // Move to the next potential asset name
+          } else {
+            // If there's a hanging element without a pair, break the loop
+            break;
+          }
         }
+      }
     });
     return results;
-}
+  }
 
 
   const getWallets = useCallback(() => {
-    if (typeof window.cardano !== "undefined") {
+    if (isClient && window.cardano) {
       const installedWallets = Object.keys(window.cardano);
       setWallets(expectedWallets.filter(wallet => installedWallets.includes(wallet)));
     }
     return [];  // Ensure that a value is returned even if `window.cardano` is undefined
-  }, [expectedWallets]);
+  }, [expectedWallets, isClient]);
 
   const connectWallet = useCallback(async (walletName) => {
     console.log(`Attempting to connect to wallet: ${walletName}`);
-    if (typeof window.cardano !== "undefined" && window.cardano[walletName]) {
-        try {
-            const api = await window.cardano[walletName].enable({ extensions: [] });
-            console.log("Wallet enabled", api);
-            setIsConnected(true);
-            setConnectedWalletId(walletName);
+    if (isClient && window.cardano && window.cardano[walletName]) {
+      try {
+        const api = await window.cardano[walletName].enable({ extensions: [] });
+        console.log("Wallet enabled", api);
+        setIsConnected(true);
+        setConnectedWalletId(walletName);
 
-            const utxoData = await api.getUtxos();
-            const decoded = assetDecoder(utxoData);
-            console.log(decoded);
-            setUtxos(decoded);
-            setAssets(processAssets(decoded));  // Notice the change here from `utxos` to `decoded`
-            console.log(assets);
-        } catch (error) {
-            console.error("Failed to enable the wallet or fetch UTXOs", error);
-        }
+        const utxoData = await api.getUtxos();
+        const decoded = assetDecoder(utxoData);
+        console.log(decoded);
+        setUtxos(decoded);
+        setAssets(processAssets(decoded));  // Notice the change here from `utxos` to `decoded`
+        console.log(assets);
+      } catch (error) {
+        console.error("Failed to enable the wallet or fetch UTXOs", error);
+      }
     } else {
-        console.error("Wallet not found or cardano object not available");
+      console.error("Wallet not found or cardano object not available");
     }
-}, [setIsConnected, setConnectedWalletId, setUtxos, setAssets, window.cardano]);
+  }, [setIsConnected, setConnectedWalletId, setUtxos, setAssets, window.cardano, isClient]);
 
 
   const disconnectWallet = useCallback(() => {
-    console.log("Disconnecting wallet...");
-    setIsConnected(false);
-    setConnectedWalletId(null);  // Clear the connected wallet ID upon disconnect
-  }, []);
+    if (isClient) {
+      console.log("Disconnecting wallet...");
+      setIsConnected(false);
+      setConnectedWalletId(null);
+    }  // Clear the connected wallet ID upon disconnect
+  }, [isClient]);
 
   return (
     <WalletContext.Provider value={{
-      isConnected, assets, connectedWalletId, connectWallet, disconnectWallet, decodeHexToAscii,
+      isConnected, assets, connectedWalletId, connectWallet, disconnectWallet, decodeHexToAscii, isClient,
       wallets
     }}>
-      {children}
+      {isClient ? children : null} // Only render children if client-side
     </WalletContext.Provider>
   );
 };
