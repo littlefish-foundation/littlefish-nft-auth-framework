@@ -66,8 +66,6 @@ coverage/
 # nyc test coverage
 .nyc_output
 
-# Compiled static files
-/public
 
 # Log files
 npm-debug.log*
