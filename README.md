@@ -8,7 +8,7 @@ npx create-next-app@latest
 
 For the demonstration we used the following values:
 
-![Untitled](https://hackmd.io/_uploads/r1MzUzTx0.png)
+![Image 1](public/image1.png)
 
 
 Install littlefish npm package
@@ -19,7 +19,7 @@ npm install littlefish-nft-auth-framework
 
 In your app directory create a “providers.jsx” file.
 
-![Screenshot%202024-04-16%20at%2021.53.01](https://hackmd.io/_uploads/SydQ8MagR.png)
+![Image 2](public/image2.png)
 
 
 ```jsx
@@ -37,7 +37,7 @@ export default function Providers({children}) {
 
 In your “app/layout.tsx” file import the Providers and wrap your {children} around the wallet provider.
 
-![Screenshot%202024-04-16%20at%2021.55.33](https://hackmd.io/_uploads/B14VIGpgC.png)
+![Image 3](public/image3.png)
 
 
 Now you are ready to use the package.
