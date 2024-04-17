@@ -1,13 +1,17 @@
 {
   "name": "littlefish-nft-auth-framework",
-  "version": "0.1.4",
+  "version": "0.1.8",
   "description": "Open Source NFT & Wallet Auth Framework for Cardano",
   "main": "dist/index.js",
   "scripts": {
     "build": "babel src --out-dir dist --copy-files --ignore **/*.test.js,**/*.story.js",
-    "test": "jest",
+    "test": "npx jest",
     "prepublish": "npm run build",
-    "lint": "eslint 'src/**/*.{js,jsx}'"
+    "lint": "eslint 'src/**/*.{js,jsx}'",
+    "clear_jest": "jest --clearCache"
+  },
+  "jest": {
+    "testEnvironment": "jsdom"
   },
   "babel": {
     "presets": [
@@ -39,7 +43,11 @@
     "@babel/core": "^7.24.4",
     "@babel/preset-env": "^7.24.4",
     "@babel/preset-react": "^7.0.0",
-    "jest": "^29.7.0"
+    "@testing-library/jest-dom": "^6.4.2",
+    "@testing-library/react": "^15.0.2",
+    "@testing-library/user-event": "^14.5.2",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
   },
   "eslintConfig": {
     "extends": [
