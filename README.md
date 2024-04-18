@@ -126,6 +126,7 @@ import { useWallet } from "littlefish-nft-auth-framework";
 
 Use the '**useWallet()**' hook inside your component to get access to several properties and methods such as **isConnected**, **wallets**, **assets**, and functions like **connectWallet**, 00disconnectWallet**, and **decodeHexToAscii**.
 ```jsx
+const {
   isConnected,
   connectWallet,
   disconnectWallet,

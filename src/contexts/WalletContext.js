@@ -179,7 +179,7 @@ export const WalletProvider = ({ children }) => {
       isConnected, assets, connectedWalletId, connectWallet, disconnectWallet, decodeHexToAscii, isClient,
       wallets
     }}>
-      {isClient ? children : null} // Only render children if client-side
+      {isClient ? children : null}
     </WalletContext.Provider>
   );
 };

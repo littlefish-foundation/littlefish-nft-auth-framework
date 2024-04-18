@@ -1,6 +1,6 @@
 {
   "name": "littlefish-nft-auth-framework",
-  "version": "0.1.9",
+  "version": "0.1.11",
   "description": "Open Source NFT & Wallet Auth Framework for Cardano",
   "main": "dist/index.js",
   "scripts": {
