@@ -1,9 +1,10 @@
 {
     "compilerOptions": {
       "target": "es5",
+      "allowJs" : true,
       "module": "commonjs",
       "lib": ["dom", "esnext"],
-      "jsx": "react-jsx",
+      "jsx": "preserve",
       "strict": true,
       "moduleResolution": "node",
       "skipLibCheck": true,

@@ -19,20 +19,20 @@ type WalletContextProps = {
   connectedWalletId: string | null;
   connectWallet: (walletName: string) => Promise<void>;
   disconnectWallet: () => void;
-  decodeHexToAscii: (processedArray: any[]) => Asset[];
+  decodeHexToAscii: (processedArray: Asset[]) => Asset[];
   isClient: boolean;
   wallets: string[];
 }
 
-const WalletContext = createContext<WalletContextProps | null>(null);
+const CardanoWalletContext = createContext<WalletContextProps | null>(null);
 
-export const useWallet = () => useContext(WalletContext);
+export const useWallet = () => useContext(CardanoWalletContext);
 
 type WalletProviderProps = {
   children: ReactNode;
 }
 
-export const WalletProvider: FC<WalletProviderProps> = ({ children }: WalletProviderProps): JSX.Element => {
+export const WalletProvider: FC<WalletProviderProps> = ({ children }: WalletProviderProps) => {
   const [isClient, setIsClient] = useState<boolean>(false);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [wallets, setWallets] = useState<string[]>([]);
@@ -45,7 +45,7 @@ export const WalletProvider: FC<WalletProviderProps> = ({ children }: WalletProv
     if (isClient) {
       getWallets();
     }
-  }, [isClient]);
+  }, [isClient, assets]);
 
   const expectedWallets: string[] = [
     "nami",
@@ -79,21 +79,34 @@ export const WalletProvider: FC<WalletProviderProps> = ({ children }: WalletProv
     return result;
   }
 
-  function processAssets(inputArray: any[]): any[] {
-    const results: any[] = [];
+  function processAssets(inputArray: any[]): Asset[] {
+    const results: Asset[] = [];
+  
     inputArray.forEach((row) => {
       if (row.length === 3) {
-        results.push(row);
+        // Assuming row is [policyID, assetName, amount]
+        const asset: Asset = {
+          policyID: row[0],
+          assetName: row[1],
+          amount: row[2]
+        };
+        results.push(asset);
       } else {
         let policyID = row[0];
         let i = 1;
         while (i < row.length) {
-          if (row[i].length === 56 && i + 2 < row.length) {
+          if (typeof row[i] === 'string' && row[i].length === 56 && i + 2 < row.length) {
             policyID = row[i];
             i++;
           }
           if (i + 1 < row.length) {
-            results.push([policyID, row[i], row[i + 1]]);
+            // Ensure row[i] is treated as assetName and row[i+1] as amount
+            const asset: Asset = {
+              policyID: policyID,
+              assetName: row[i],
+              amount: parseInt(row[i + 1], 10) // Convert to number if not already
+            };
+            results.push(asset);
             i += 2;
           } else {
             break;
@@ -101,20 +114,23 @@ export const WalletProvider: FC<WalletProviderProps> = ({ children }: WalletProv
         }
       }
     });
-    console.log(results)
     return results;
   }
+
+  useEffect(() => {
+    console.log(assets);
+    }, [assets]);
 
   const assetDecoder = (hexDataArray: string[]): any[] => {
     let results: any[] = [];
 
     hexDataArray.forEach((hexData) => {
       const bytes = new Uint8Array(
-        hexData.match(/[\da-f]{2}/gi).map((h) => parseInt(h, 16))
+        hexData.match(/[\da-f]{2}/gi)?.map((h) => parseInt(h, 16)) || []
       );
       const decoded = cbor.decode(bytes.buffer);
 
-      decoded.forEach((utxo) => {
+      decoded.forEach((utxo: any[]) => {
         if (
           Array.isArray(utxo) &&
           utxo.length === 2 &&
@@ -125,34 +141,27 @@ export const WalletProvider: FC<WalletProviderProps> = ({ children }: WalletProv
           let assetResults: any[] = [];
           Object.entries(assets).forEach(([key, val]) => {
             if (typeof key === "string") {
-              key = new Uint8Array(key.split(",").map(Number));
-            }
-            const keyHex = byteArrayToHex(key);
-            let assetDetail = [keyHex];
-            let details = [];
-            Object.entries(val).forEach(
-              ([innerKey, innerVal], index, array) => {
+              const keyBytes = new Uint8Array(key.split(",").map(Number));
+              const keyHex: string = byteArrayToHex(keyBytes);
+              let assetDetail: any[] = [keyHex];
+              let details: any[] = [];
+              Object.entries(val as { [s: string]: unknown }).forEach(([innerKey, innerVal], index, array) => {
                 if (typeof innerKey === "string") {
-                  innerKey = new Uint8Array(innerKey.split(",").map(Number));
+                  const innerKeyBytes = new Uint8Array(innerKey.split(",").map(Number));
+                  const innerKeyHex: string = byteArrayToHex(innerKeyBytes);
+                  assetDetail.push(innerKeyHex, innerVal);
                 }
-                const innerKeyHex = byteArrayToHex(innerKey);
-                //console.log(innerKeyHex, innerVal);
-                assetDetail.push(innerKeyHex, innerVal);
-                //console.log(assetDetail);
               });
-            assetResults.push(assetDetail);
+              assetResults.push(assetDetail);
+            }
             assetResults = assetResults.flat();
-            //console.log(assetResults);
           });
           results.push(assetResults);
-          //results = results.flat();
-          //console.log(results)
         }
       });
     });
 
     setAssets(results);
-    console.log(results)
     return results;
   };
 
@@ -179,8 +188,9 @@ export const WalletProvider: FC<WalletProviderProps> = ({ children }: WalletProv
 
         const utxoData = await api.getUtxos();
         const decoded = assetDecoder(utxoData);
+        const processed = processAssets(decoded);
+        setAssets(processed);
         setUtxos(decoded);
-        setAssets(processAssets(decoded)); // Assuming processAssets is integrated here
       } catch (error) {
         console.error("Failed to enable the wallet or fetch UTXOs", error);
         setIsConnected(false);
@@ -199,7 +209,7 @@ export const WalletProvider: FC<WalletProviderProps> = ({ children }: WalletProv
   }, [isClient]);
 
   return (
-    <WalletContext.Provider value={{
+    <CardanoWalletContext.Provider value={{
       isConnected,
       assets,
       connectedWalletId,
@@ -210,6 +220,6 @@ export const WalletProvider: FC<WalletProviderProps> = ({ children }: WalletProv
       wallets,
     }}>
       {children}
-    </WalletContext.Provider>
+    </CardanoWalletContext.Provider>
   );
 };

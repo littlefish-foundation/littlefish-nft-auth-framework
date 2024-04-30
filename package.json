@@ -39,11 +39,15 @@
     "auth"
   ],
   "peerDependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "^18",
+    "react-dom": "^18"
   },
   "dependencies": {
-    "cbor-js": "^0.1.0"
+    "@types/jest": "^29.5.12",
+    "cbor-js": "^0.1.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-hook-form": "^7.51.3"
   },
   "devDependencies": {
     "@babel/cli": "^7.24.1",
@@ -55,9 +59,9 @@
     "@testing-library/react": "^15.0.2",
     "@testing-library/user-event": "^14.5.2",
     "@types/cbor-js": "^0.1.1",
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
+    "@types/node": "^20.12.7",
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "ts-jest": "^29.1.2",
@@ -67,6 +71,17 @@
     "extends": [
       "react-app",
       "react-app/jest"
+    ],
+    "overrides": [
+      {
+        "files": [
+          "**/*.ts",
+          "**/*.tsx"
+        ],
+        "rules": {
+          "typescript-eslint/rule-name": "error"
+        }
+      }
     ]
   },
   "author": "Littlefish Foundation",
