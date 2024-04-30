@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { render, waitFor, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-import { WalletProvider, useWallet } from './WalletContext';
+import { WalletProvider, useWallet } from './WalletContext.ts';
 
 describe('WalletProvider Component', () => {
     const TestComponent = () => {
