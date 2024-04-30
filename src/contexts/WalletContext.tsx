@@ -23,10 +23,20 @@ type WalletContextProps = {
   isClient: boolean;
   wallets: string[];
 }
+const defaultContext: WalletContextProps = {
+  isConnected: false,
+  assets: [],
+  connectedWalletId: null,
+  connectWallet: async (walletName: string) => { console.log(`Connecting to ${walletName}`); },
+  disconnectWallet: () => { console.log("Disconnecting wallet"); },
+  decodeHexToAscii: (processedArray: any[]) => processedArray,
+  isClient: false,
+  wallets: [],
+};
 
-const CardanoWalletContext = createContext<WalletContextProps | null>(null);
+const WalletContext = createContext<WalletContextProps>(defaultContext);
 
-export const useWallet = () => useContext(CardanoWalletContext);
+export const useWallet = () => useContext(WalletContext);
 
 type WalletProviderProps = {
   children: ReactNode;
@@ -209,7 +219,7 @@ export const WalletProvider: FC<WalletProviderProps> = ({ children }: WalletProv
   }, [isClient]);
 
   return (
-    <CardanoWalletContext.Provider value={{
+    <WalletContext.Provider value={{
       isConnected,
       assets,
       connectedWalletId,
@@ -220,6 +230,6 @@ export const WalletProvider: FC<WalletProviderProps> = ({ children }: WalletProv
       wallets,
     }}>
       {children}
-    </CardanoWalletContext.Provider>
+    </WalletContext.Provider>
   );
 };
