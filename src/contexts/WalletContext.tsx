@@ -1,6 +1,22 @@
-import React, { useState, useContext, createContext, useCallback, useEffect, ReactNode, FC } from "react";
+import React, { useState, useContext, createContext, useEffect, ReactNode, FC } from "react";
 import { getWallets, connectWallet, disconnectWallet } from "../api/cardanoAPI";
-import { WalletContextProps, Asset } from "../types/types";
+import { Asset, WalletContextProps } from "../types/types";
+
+const defaultContext: WalletContextProps = {
+  isConnected: false,
+  setIsConnected: () => {},
+  assets: [],
+  setAssets: () => {},
+  connectedWalletId: null,
+  setConnectedWalletId: () => {},
+  connectWallet: async () => {},
+  disconnectWallet: () => {},
+  decodeHexToAscii: (processedArray) => processedArray,
+  isClient: true,
+  setIsClient: () => {},
+  wallets: [],
+  setWallets: () => {},
+};
 
 
 const WalletContext = createContext<WalletContextProps>(defaultContext);
@@ -12,45 +28,56 @@ type WalletProviderProps = {
 }
 
 export const WalletProvider: FC<WalletProviderProps> = ({ children }: WalletProviderProps) => {
-  const [isClient, setIsClient] = useState<boolean>(false);
   const [isConnected, setIsConnected] = useState<boolean>(false);
-  const [wallets, setWallets] = useState<string[]>([]);
-  const [connectedWalletId, setConnectedWalletId] = useState<string | null>(null);
-  const [utxos, setUtxos] = useState<any[]>([]); // Use a more specific type if possible
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [connectedWalletId, setConnectedWalletId] = useState<string | null>(null);
+  const [wallets, setWallets] = useState<string[]>([]);
+
+  const handleConnectWallet = async (walletName: string) => {
+    const [success, walletId, walletAssets] = await connectWallet(walletName, isClient, isConnected);
+    if (success && walletId && walletAssets) {
+      setIsConnected(true);
+      setConnectedWalletId(walletId);
+      setAssets(walletAssets);
+    }
+  };
+
+  const handleDisconnectWallet = () => {
+    const [success, disconnectedWalletId] = disconnectWallet(isClient, isConnected);
+    if (success && disconnectedWalletId) {
+      setIsConnected(false);
+      setConnectedWalletId(null);
+      setAssets([]);
+    }
+  };
 
   useEffect(() => {
     setIsClient(typeof window !== "undefined");
     if (isClient) {
-      getWallets();
+      const installedWallets = getWallets(isClient);
+      setWallets(installedWallets);
     }
-  }, [isClient, assets]);
+  }, [isClient]);
 
-  const expectedWallets: string[] = [
-    "nami",
-    "eternl",
-    "yoroi",
-    "flint",
-    "typhon",
-    "gerowallet",
-    "nufi",
-    "lace",
-  ];
-
-  useEffect(() => {
-    console.log(assets);
-    }, [assets]);
+  const handleDecodeHexToAscii = (processedArray: Asset[]): Asset[] => {
+    return decodeHexToAscii(processedArray);
+  };
 
   return (
     <WalletContext.Provider value={{
       isConnected,
+      setIsConnected,
       assets,
+      setAssets,
       connectedWalletId,
-      connectWallet,
-      disconnectWallet,
-      decodeHexToAscii,
+      setConnectedWalletId,
+      connectWallet: handleConnectWallet,
+      disconnectWallet: handleDisconnectWallet,
+      decodeHexToAscii: handleDecodeHexToAscii,
       isClient,
+      setIsClient,
       wallets,
+      setWallets,
     }}>
       {children}
     </WalletContext.Provider>
