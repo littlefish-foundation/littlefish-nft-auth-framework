@@ -22,16 +22,15 @@ export async function connectWallet(
   walletName: string,
   isClient: boolean,
   isConnected: boolean
-): Promise<[boolean, string | null, Asset[] | null]> {
-  let walletId: string | null = null;
+): Promise<[boolean, string, Asset[] | null]> {
   let walletAssets: Asset[] | null = null;
   if (isClient && window.cardano && window.cardano[walletName]) {
     try {
       const api = await window.cardano[walletName].enable();
       const utxoData = await api.getUtxos();
-      const decoded = processAssets(assetDecoder(utxoData));
+      const walletAssets = processAssets(assetDecoder(utxoData));
       isConnected = true;
-      return [isConnected, walletName, decoded];
+      return [isConnected, walletName, walletAssets];
     } catch (error) {
       console.error("Failed to enable the wallet or fetch UTXOs", error);
       isConnected = false;
@@ -43,19 +42,15 @@ export async function connectWallet(
     console.error("Wallet not found or cardano object not available");
   }
 
-  return [isConnected, walletId, walletAssets];
+  return [isConnected, walletName, walletAssets];
 }
 
-export function disconnectWallet(isClient: boolean, isConnected: boolean): Promise<[boolean, string | null]> {
-  let success = false;
-  let disconnectWalletId: string | null = null;
-  if (isClient && isConnected) {
-    // setIsConnected(false);
-    isConnected = false;
-    disconnectWalletId = null;
-    // setConnectedWalletId(null);
+export function disconnectWallet(isClient: boolean, isConnected: boolean): boolean {
+  let connectionStatus = isConnected;
+  if (isClient && connectionStatus) {
+    connectionStatus = false;
   }
-  return [success, disconnectWalletId];
+  return connectionStatus;
 }
 
 export function getWallets(isClient: boolean) {

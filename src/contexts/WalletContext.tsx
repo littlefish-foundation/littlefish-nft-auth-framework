@@ -1,21 +1,17 @@
 import React, { useState, useContext, createContext, useEffect, ReactNode, FC } from "react";
 import { getWallets, connectWallet, disconnectWallet } from "../api/cardanoAPI";
 import { Asset, WalletContextProps } from "../types/types";
+import { decodeHexToAscii } from "../utils/utils";
 
 const defaultContext: WalletContextProps = {
   isConnected: false,
-  setIsConnected: () => {},
   assets: [],
-  setAssets: () => {},
   connectedWalletId: null,
-  setConnectedWalletId: () => {},
   connectWallet: async () => {},
   disconnectWallet: () => {},
   decodeHexToAscii: (processedArray) => processedArray,
   isClient: true,
-  setIsClient: () => {},
   wallets: [],
-  setWallets: () => {},
 };
 
 
@@ -32,6 +28,7 @@ export const WalletProvider: FC<WalletProviderProps> = ({ children }: WalletProv
   const [assets, setAssets] = useState<Asset[]>([]);
   const [connectedWalletId, setConnectedWalletId] = useState<string | null>(null);
   const [wallets, setWallets] = useState<string[]>([]);
+  const [isClient, setIsClient] = useState<boolean>(true);
 
   const handleConnectWallet = async (walletName: string) => {
     const [success, walletId, walletAssets] = await connectWallet(walletName, isClient, isConnected);
@@ -43,9 +40,8 @@ export const WalletProvider: FC<WalletProviderProps> = ({ children }: WalletProv
   };
 
   const handleDisconnectWallet = () => {
-    const [success, disconnectedWalletId] = disconnectWallet(isClient, isConnected);
-    if (success && disconnectedWalletId) {
-      setIsConnected(false);
+     setIsConnected(disconnectWallet(isClient, isConnected));
+    if (!isConnected) {
       setConnectedWalletId(null);
       setAssets([]);
     }
@@ -55,7 +51,7 @@ export const WalletProvider: FC<WalletProviderProps> = ({ children }: WalletProv
     setIsClient(typeof window !== "undefined");
     if (isClient) {
       const installedWallets = getWallets(isClient);
-      setWallets(installedWallets);
+      setWallets(installedWallets || []); // Fix: Provide an empty array as the default value
     }
   }, [isClient]);
 
@@ -66,18 +62,13 @@ export const WalletProvider: FC<WalletProviderProps> = ({ children }: WalletProv
   return (
     <WalletContext.Provider value={{
       isConnected,
-      setIsConnected,
       assets,
-      setAssets,
       connectedWalletId,
-      setConnectedWalletId,
       connectWallet: handleConnectWallet,
       disconnectWallet: handleDisconnectWallet,
       decodeHexToAscii: handleDecodeHexToAscii,
       isClient,
-      setIsClient,
       wallets,
-      setWallets,
     }}>
       {children}
     </WalletContext.Provider>
