@@ -1,5 +1,9 @@
 {
     "compilerOptions": {
+      "baseUrl": "",
+      "paths": {
+        "@frontend/*": ["src/frontend/*"],
+      },
       "target": "es5",
       "allowJs" : true,
       "module": "commonjs",
