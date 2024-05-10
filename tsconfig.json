@@ -3,6 +3,7 @@
       "baseUrl": "",
       "paths": {
         "@frontend/*": ["src/frontend/*"],
+        "@backend/*": ["src/backend/*"],
       },
       "target": "es5",
       "allowJs" : true,

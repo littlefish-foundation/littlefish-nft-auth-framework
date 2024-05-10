@@ -1,6 +1,6 @@
 {
   "name": "littlefish-nft-auth-framework-beta",
-  "version": "0.1.9",
+  "version": "0.1.18",
   "description": "Open Source NFT & Wallet Auth Framework for Cardano",
   "main": "dist/index.js",
   "scripts": {
@@ -55,10 +55,7 @@
     "@types/jest": "^29.5.12",
     "bcryptjs": "^2.4.3",
     "cbor-js": "^0.1.0",
-    "cookie-parser": "^1.4.6",
     "crypto": "^1.0.1",
-    "express": "^4.19.2",
-    "jose": "^5.2.4",
     "prisma": "^5.13.0",
     "react": "^18",
     "react-dom": "^18",

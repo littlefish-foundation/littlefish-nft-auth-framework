@@ -13,4 +13,6 @@ export interface WalletContextProps {
   decodeHexToAscii: (processedArray: Asset[]) => Asset[];
   isClient: boolean;
   wallets: string[];
+  networkID: number;
+  addresses: [string];
 };

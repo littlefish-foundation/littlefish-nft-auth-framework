@@ -2,6 +2,7 @@ import React, { useState, useContext, createContext, useEffect, ReactNode, FC } 
 import { getWallets, connectWallet, disconnectWallet } from "../api/cardanoAPI";
 import { Asset, WalletContextProps } from "../types/types";
 import { decodeHexToAscii } from "../utils/utils";
+import { set } from "react-hook-form";
 
 const defaultContext: WalletContextProps = {
   isConnected: false,
@@ -12,6 +13,8 @@ const defaultContext: WalletContextProps = {
   decodeHexToAscii: (processedArray) => processedArray,
   isClient: true,
   wallets: [],
+  networkID: 0,
+  addresses: [""],
 };
 
 
@@ -29,13 +32,17 @@ export const WalletProvider: FC<WalletProviderProps> = ({ children }: WalletProv
   const [connectedWalletId, setConnectedWalletId] = useState<string | null>(null);
   const [wallets, setWallets] = useState<string[]>([]);
   const [isClient, setIsClient] = useState<boolean>(true);
+  const [networkID, setNetworkID] = useState<number>(0);
+  const [addresses, setAddresses] = useState<[string]>([""]);
 
   const handleConnectWallet = async (walletName: string) => {
-    const [success, walletId, walletAssets] = await connectWallet(walletName, isClient, isConnected);
+    const [success, walletId, walletAssets, networkID, address] = await connectWallet(walletName, isClient, isConnected);
     if (success && walletId && walletAssets) {
       setIsConnected(true);
       setConnectedWalletId(walletId);
       setAssets(walletAssets);
+      setNetworkID(networkID);
+      setAddresses(address);
     }
   };
 
@@ -69,6 +76,8 @@ export const WalletProvider: FC<WalletProviderProps> = ({ children }: WalletProv
       decodeHexToAscii: handleDecodeHexToAscii,
       isClient,
       wallets,
+      networkID,
+      addresses
     }}>
       {children}
     </WalletContext.Provider>

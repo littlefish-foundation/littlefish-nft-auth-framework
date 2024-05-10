@@ -4,6 +4,10 @@ import bcrypt from "bcryptjs";
 import { randomBytes } from 'crypto';
 import { PrismaClient } from '@prisma/client';
 
+export function isNonEmptyString(str: string): boolean {
+    return typeof str === 'string' && str.trim() !== '';
+}
+
 export function validateEmail(email: string) {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
