@@ -8,7 +8,7 @@
       "allowJs" : true,
       "module": "commonjs",
       "lib": ["dom", "esnext"],
-      "types": ["jest"],
+      "types": ["jest", "node"],
       "jsx": "react-jsx",
       "strict": true,
       "moduleResolution": "node",
@@ -19,5 +19,5 @@
       "noEmit": true,
       "isolatedModules": true
     },
-    "include": ["src/**/*", "test/**/*", ".d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"]
+    "include": ["src/**/*", "test/**/*", ".d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "test.js", "package.json"]
   }
