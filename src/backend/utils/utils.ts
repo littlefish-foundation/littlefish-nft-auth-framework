@@ -12,7 +12,7 @@ export function validateEmail(email: string) {
     return regex.test(email);
 }
 
-function convertHexToBech32(hex: string) {
+export function convertHexToBech32(hex: string) {
     try {
       const bytes = Buffer.from(hex, "hex");
       const words = bech32.toWords(bytes);

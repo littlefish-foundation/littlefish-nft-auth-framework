@@ -1,14 +1,13 @@
 import { verifyPassword, verifyWalletAddress, validateEmail, isNonEmptyString } from './utils/utils';
-import { SignupOptions, LoginResult, User} from './types/types';
+import { SignupOptions, LoginResult, User } from './types/types';
 
 /**
  * Authentication function to validate users based on email and password or a wallet address.
  * Assumes that user data fetching is handled outside this function.
  *
- * @param {object} user - The user object containing at least email, password hash, or wallet address.
- * @param {string} password - The plain text password for verification.
- * @param {string} walletAddress - The wallet address for verification.
- * @return {object} The authenticated user object or null if authentication fails.
+ * @param {User} user - The user object containing at least email, password hash, or wallet address.
+ * @param {SignupOptions} options - The options containing credentials for verification.
+ * @return {LoginResult} The result of the authentication.
  */
 export function loginUser(
     user: User,
@@ -25,7 +24,7 @@ export function loginUser(
             return { success: false, error: 'Invalid wallet authentication' };
         }
         return { success: true };
-    } else if (email && password && email !== user.email) {
+    } else if (email && password) {
         if (!validateEmail(email) || email !== user.email) {
             return { success: false, error: 'Invalid email or email format' };
         }

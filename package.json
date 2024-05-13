@@ -20,32 +20,60 @@
     }
   },
   "scripts": {
-    "build:backend": "babel src/backend --out-dir dist/backend --extensions \".ts,.tsx\" --ignore \"**/*.d.ts\"\"**/*.test.ts\",\"**/*.test.tsx\",\"**/__tests__/*\" && tsc --project ./tsconfig.json",
-    "build:frontend": "babel src/frontend --out-dir dist/frontend --extensions \".ts,.tsx\" --ignore \"**/*.d.ts\"\"**/*.test.ts\",\"**/*.test.tsx\",\"**/__tests__/*\" && tsc --project ./tsconfig.json",
+    "build:backend": "babel src/backend --out-dir dist/backend --extensions \".ts,.tsx\" --ignore \"**/*.d.ts\",\"**/*.test.ts\",\"**/*.test.tsx\",\"**/__tests__/*\" && tsc --project ./tsconfig.json",
+    "build:frontend": "babel src/frontend --out-dir dist/frontend --extensions \".ts,.tsx\" --ignore \"**/*.d.ts\",\"**/*.test.ts\",\"**/*.test.tsx\",\"**/__tests__/*\" && tsc --project ./tsconfig.json",
     "build": "npm run build:backend && npm run build:frontend",
     "test": "npx jest",
     "prepublish": "npm run build"
-  },  
+  },
   "jest": {
-    "setupFiles": [
-      "./jest.setup.js"
-    ],
-    "preset": "ts-jest",
-    "testEnvironment": "jsdom",
-    "transform": {
-      "^.+\\.(ts|tsx)$": [
-        "ts-jest",
-        {
-          "tsconfig": "tsconfig.json",
-          "ts-jest": {
-            "tsconfig": "tsconfig.json"
-          }
+    "projects": [
+      {
+        "displayName": "jsdom",
+        "testEnvironment": "jsdom",
+        "setupFiles": [
+          "./jest.setup.js"
+        ],
+        "transform": {
+          "^.+\\.(js|jsx|ts|tsx)$": "babel-jest"
+        },
+        "transformIgnorePatterns": [
+          "node_modules/(?!module-to-transform)"
+        ],
+        "testMatch": [
+          "<rootDir>/src/frontend/**/?(*.)+(spec|test).[jt]s?(x)"
+        ]
+      },
+      {
+        "displayName": "node",
+        "testEnvironment": "node",
+        "transform": {
+          "^.+\\.(ts|tsx)$": "ts-jest"
+        },
+        "transformIgnorePatterns": [
+          "node_modules/(?!module-to-transform)"
+        ],
+        "testMatch": [
+          "<rootDir>/src/backend/**/?(*.)+(spec|test).[jt]s?(x)"
+        ]
+      }
+    ]
+  },
+  "preset": "ts-jest",
+  "testEnvironment": "jsdom",
+  "transform": {
+    "^.+\\.(ts|tsx)$": [
+      "ts-jest",
+      {
+        "tsconfig": "tsconfig.json",
+        "ts-jest": {
+          "tsconfig": "tsconfig.json"
         }
-      ]
-    },
-    "moduleNameMapper": {
-      "\\.(css|less|scss|sass)$": "identity-obj-proxy"
-    }
+      }
+    ]
+  },
+  "moduleNameMapper": {
+    "\\.(css|less|scss|sass)$": "identity-obj-proxy"
   },
   "babel": {
     "presets": [
