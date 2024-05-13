@@ -1,23 +1,6 @@
 import { verifyPassword, verifyWalletAddress, validateEmail, isNonEmptyString } from './utils/utils';
+import { SignupOptions, LoginResult, User} from './types/types';
 
-
-function validateLoginInputs(user: { email?: string, password?: string, walletAddress?: string }, email?: string, password?: string, walletAddress?: string, signature?: string, key?: string, message?: string, networkID?: number) {
-    if (!user) throw new Error("User object is required.");
-
-    if (walletAddress && signature && key && message && networkID) {
-        // Validate wallet address and related parameters
-        if (!isNonEmptyString(walletAddress) || !isNonEmptyString(signature) || !isNonEmptyString(key) || !isNonEmptyString(message) || typeof networkID !== 'number'   ) {
-            throw new Error("All wallet authentication parameters must be non-empty strings.");
-        }
-    } else if (email && password) {
-        // Validate email and password
-        if (!validateEmail(email)) throw new Error("Invalid email format.");
-        if (!isNonEmptyString(password)) throw new Error("Password must be a non-empty string.");
-    } else {
-        // Ensure that some form of authentication data is provided
-        throw new Error("Authentication data is incomplete.");
-    }
-}
 /**
  * Authentication function to validate users based on email and password or a wallet address.
  * Assumes that user data fetching is handled outside this function.
@@ -28,30 +11,28 @@ function validateLoginInputs(user: { email?: string, password?: string, walletAd
  * @return {object} The authenticated user object or null if authentication fails.
  */
 export function loginUser(
-    user: { email?: string, password?: string, walletAddress?: string, walletNetwork?: number },
-    email?: string,
-    password?: string,
-    walletAddress?: string,
-    signature?: string,
-    key?: string,
-    message?: string,
-    networkID?: number
-) {
-    validateLoginInputs(user, email, password, walletAddress, signature, key, message, networkID);
+    user: User,
+    options: SignupOptions
+): LoginResult {
+    const { email, password, walletAddress, walletNetwork, signature, key, nonce } = options;
 
-    if (walletAddress && signature && key && message && walletAddress !== user.walletAddress) {
-        if (networkID !== user.walletNetwork) {
-            throw new Error('Invalid network');
+    if (walletAddress && signature && key && nonce && walletNetwork) {
+        if (walletAddress !== user.walletAddress || walletNetwork !== user.walletNetwork) {
+            return { success: false, error: 'Invalid network or wallet address' };
         }
-        const isValidSignature = verifyWalletAddress(signature, key, message, walletAddress, networkID);
+        const isValidSignature = verifyWalletAddress(signature, key, nonce, walletAddress);
         if (!isValidSignature) {
-            throw new Error('Invalid wallet authentication');
+            return { success: false, error: 'Invalid wallet authentication' };
         }
-        return user;
+        return { success: true };
     } else if (email && password && email !== user.email) {
-        if (user.password && verifyPassword(password, user.password)) {
-            return user;
+        if (!validateEmail(email) || email !== user.email) {
+            return { success: false, error: 'Invalid email or email format' };
         }
+        if (!isNonEmptyString(password) || (user.password && !verifyPassword(password, user.password))) {
+            return { success: false, error: 'Invalid password' };
+        }
+        return { success: true };
     }
-    throw new Error('Authentication failed');
+    return { success: false, error: 'Invalid login inputs' };
 }

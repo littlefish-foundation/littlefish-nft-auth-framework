@@ -1,8 +1,7 @@
 import verifySignature from '@cardano-foundation/cardano-verify-datasignature';
-import { Address } from '@emurgo/cardano-serialization-lib-asmjs';
 import bcrypt from "bcryptjs";
 import { randomBytes } from 'crypto';
-import { PrismaClient } from '@prisma/client';
+import { bech32 } from "bech32";
 
 export function isNonEmptyString(str: string): boolean {
     return typeof str === 'string' && str.trim() !== '';
@@ -13,18 +12,31 @@ export function validateEmail(email: string) {
     return regex.test(email);
 }
 
+function convertHexToBech32(hex: string) {
+    try {
+      const bytes = Buffer.from(hex, "hex");
+      const words = bech32.toWords(bytes);
+      try {
+        const result = bech32.encode("stake", words);
+        return(result);
+      } catch (innerError) {
+        console.error("Encoding error:", innerError);
+      }
+    } catch (error) {
+      console.error("Error converting hex to bytes:", error);
+    }
+  };
+
 export function validatePassword(password: string) {
     const regex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[A-Za-z/d@$!%*?&].{8,}$/;
     return regex.test(password);
 }
 
-export function verifyWalletAddress(signature: string, key: string, message: string, hex: string, networkID: number = 0): boolean {
+export function verifyWalletAddress(signature: string, key: string, message: string, hex: string): boolean {
     try {
-        const address = Address.from_hex(hex);
-        const bech32Prefix = networkID === 1 ? "addr" : "addr_test";
-        const bech32Address = address.to_bech32(bech32Prefix);
+        const address = convertHexToBech32(hex);
 
-        return verifySignature(signature, key, message, bech32Address);
+        return verifySignature(signature, key, message, address);
     } catch (error) {
         console.error("Failed to verify wallet address:", error);
         return false;
@@ -42,23 +54,3 @@ export function verifyPassword(password: string, hash: string): boolean {
 export function generateNonce(): string {
     return randomBytes(16).toString('hex'); // Generate a 16-byte hex string
 };
-
-/**
-* Finds a user by email using the provided Prisma client instance.
-* @param {PrismaClient} prisma
-* @param {string} email
-* @return {Promise<User | null>}
-*/
-export async function findUserByEmail(prisma: PrismaClient, email: string) {
-    return await prisma.user.findUnique({ where: { email } });
-}
-
-/**
-* Finds a user by wallet address using the provided Prisma client instance.
-* @param {PrismaClient} prisma
-* @param {string} walletAddress
-* @return {Promise<User | null>}
-*/
-export async function findUserByWalletAddress(prisma: PrismaClient, walletAddress: string) {
-    return await prisma.user.findUnique({ where: { walletAddress } });
-}

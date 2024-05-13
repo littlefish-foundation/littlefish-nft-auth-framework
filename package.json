@@ -1,28 +1,50 @@
 {
   "name": "littlefish-nft-auth-framework-beta",
-  "version": "0.1.18",
+  "version": "0.1.44",
   "description": "Open Source NFT & Wallet Auth Framework for Cardano",
-  "main": "dist/index.js",
-  "scripts": {
-    "build": "babel src --out-dir dist --extensions \".ts,.tsx\" --copy-files --ignore **/*.test.js,**/*.story.js",
-    "test": "npx jest",
-    "prepublish": "npm run build",
-    "lint": "eslint 'src/**/*.{js,jsx}'",
-    "clear_jest": "jest --clearCache"
+  "main": "dist/backend/index.js",
+  "browser": "dist/frontend/index.js",
+  "files": [
+    "dist/**/**",
+    "README.md"
+  ],
+  "exports": {
+    ".": "./dist/frontend/index.js",
+    "./backend": {
+      "import": "./dist/backend/index.js",
+      "types": "./dist/backend/index.d.ts"
+    },
+    "./frontend": {
+      "import": "./dist/frontend/index.js",
+      "types": "./dist/frontend/index.d.ts"
+    }
   },
+  "scripts": {
+    "build:backend": "babel src/backend --out-dir dist/backend --extensions \".ts,.tsx\" --ignore \"**/*.d.ts\"\"**/*.test.ts\",\"**/*.test.tsx\",\"**/__tests__/*\" && tsc --project ./tsconfig.json",
+    "build:frontend": "babel src/frontend --out-dir dist/frontend --extensions \".ts,.tsx\" --ignore \"**/*.d.ts\"\"**/*.test.ts\",\"**/*.test.tsx\",\"**/__tests__/*\" && tsc --project ./tsconfig.json",
+    "build": "npm run build:backend && npm run build:frontend",
+    "test": "npx jest",
+    "prepublish": "npm run build"
+  },  
   "jest": {
+    "setupFiles": [
+      "./jest.setup.js"
+    ],
     "preset": "ts-jest",
     "testEnvironment": "jsdom",
     "transform": {
-      "^.+\\.(ts|tsx)$": "ts-jest"
+      "^.+\\.(ts|tsx)$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.json",
+          "ts-jest": {
+            "tsconfig": "tsconfig.json"
+          }
+        }
+      ]
     },
     "moduleNameMapper": {
       "\\.(css|less|scss|sass)$": "identity-obj-proxy"
-    },
-    "globals": {
-      "ts-jest": {
-        "tsconfig": "tsconfig.json"
-      }
     }
   },
   "babel": {
@@ -50,7 +72,6 @@
   },
   "dependencies": {
     "@cardano-foundation/cardano-verify-datasignature": "^1.0.11",
-    "@emurgo/cardano-serialization-lib-asmjs": "^11.5.0",
     "@prisma/client": "^5.13.0",
     "@types/jest": "^29.5.12",
     "bcryptjs": "^2.4.3",
@@ -59,7 +80,8 @@
     "prisma": "^5.13.0",
     "react": "^18",
     "react-dom": "^18",
-    "react-hook-form": "^7.51.3"
+    "react-hook-form": "^7.51.3",
+    "util": "^0.12.5"
   },
   "devDependencies": {
     "@babel/cli": "^7.24.1",
@@ -75,8 +97,10 @@
     "@types/node": "^20.12.11",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.0",
+    "i": "^0.3.7",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
+    "npm": "^10.7.0",
     "ts-jest": "^29.1.2",
     "typescript": "^5.4.5"
   },

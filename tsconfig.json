@@ -1,24 +1,42 @@
 {
-    "compilerOptions": {
-      "baseUrl": "",
-      "paths": {
-        "@frontend/*": ["src/frontend/*"],
-        "@backend/*": ["src/backend/*"],
-      },
-      "target": "es5",
-      "allowJs" : true,
-      "module": "commonjs",
-      "lib": ["dom", "esnext"],
-      "types": ["jest", "node"],
-      "jsx": "react-jsx",
-      "strict": true,
-      "moduleResolution": "node",
-      "skipLibCheck": true,
-      "esModuleInterop": true,
-      "allowSyntheticDefaultImports": true,
-      "forceConsistentCasingInFileNames": true,
-      "noEmit": true,
-      "isolatedModules": true
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDirs": ["src/backend", "src/frontend"],
+    "declaration": true, // Generate .d.ts files
+    "declarationMap": true,
+    "emitDeclarationOnly": true,  // Ensures only .d.ts files are emitted
+    "noEmitOnError": true,
+    "baseUrl": "",
+    "paths": {
+      "@frontend/*": [
+        "src/frontend/*"
+      ],
+      "@backend/*": [
+        "src/backend/*"
+      ],
     },
-    "include": ["src/**/*", "test/**/*", ".d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "test.js", "package.json"]
-  }
+    "target": "es5",
+    "module": "commonjs",
+    "lib": [
+      "dom",
+      "esnext"
+    ],
+    "types": [
+      "jest",
+      "node"
+    ],
+    "jsx": "react-jsx",
+    "allowSyntheticDefaultImports": true,
+    "noEmit": false,
+  },
+  "include": [
+    "src/**/*"
+  ],
+    "exclude": [
+      "node_modules",
+      "dist",
+      "**/*.test.ts",
+      "**/*.story.ts"
+    ]
+  
+}
