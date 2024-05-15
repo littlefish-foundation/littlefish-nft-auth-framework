@@ -36,12 +36,12 @@ export const WalletProvider: FC<WalletProviderProps> = ({ children }: WalletProv
   const [addresses, setAddresses] = useState<[string]>([""]);
 
   const handleConnectWallet = async (walletName: string) => {
-    const [success, walletId, walletAssets, address] = await connectWallet(walletName, isClient, isConnected);
+    const [success, walletId, walletAssets, address, network] = await connectWallet(walletName, isClient, isConnected);
     if (success && walletId && walletAssets) {
       setIsConnected(true);
       setConnectedWalletId(walletId);
       setAssets(walletAssets);
-      setNetworkID(networkID);
+      setNetworkID(network);
       setAddresses(address);
     }
   };
