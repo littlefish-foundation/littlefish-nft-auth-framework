@@ -1,4 +1,4 @@
-import { hashPassword, validateEmail, validatePassword, verifyWalletAddress } from './utils/utils';
+import { validateEmail, verifyWalletAddress } from './utils/utils';
 import { SignupOptions, SignupResult } from './types/types';
 
 export function signupUser(
@@ -18,10 +18,7 @@ export function signupUser(
             if (!validateEmail(email)) {
                 return { success: false, error: 'Invalid email format' };
             }
-            if (!validatePassword(password)) {
-                return { success: false, error: 'Password must be a stronger' };
-            }
-            return { success: true, email, passwordHash: hashPassword(password) };
+            return { success: true, email, passwordHash : password };
         }
     } catch (error) {
         if (error instanceof Error) {

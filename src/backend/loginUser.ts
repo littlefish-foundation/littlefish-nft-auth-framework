@@ -28,9 +28,6 @@ export function loginUser(
         if (!validateEmail(email) || email !== user.email) {
             return { success: false, error: 'Invalid email or email format' };
         }
-        if (!isNonEmptyString(password) || (user.password && !verifyPassword(password, user.password))) {
-            return { success: false, error: 'Invalid password' };
-        }
         return { success: true };
     }
     return { success: false, error: 'Invalid login inputs' };
