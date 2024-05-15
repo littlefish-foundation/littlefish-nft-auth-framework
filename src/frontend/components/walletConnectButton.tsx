@@ -1,5 +1,7 @@
+"use client"
 import React, { useState } from 'react';
 import { useWallet } from '../contexts/WalletContext';
+import './walletConnectButton.css';
 
 const WalletConnectButton: React.FC = () => {
   const {
@@ -21,20 +23,22 @@ const WalletConnectButton: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className="container">
       {isConnected ? (
-        <button onClick={() => disconnectWallet()}>Disconnect {connectedWalletId}</button>
+        <button className="button" onClick={() => disconnectWallet()}>
+          Disconnect {connectedWalletId}
+        </button>
       ) : (
         <div>
-          <button onClick={() => handleConnectClick()}>Connect Wallet</button>
+          <button className="button" onClick={() => handleConnectClick()}>
+            Connect Wallet
+          </button>
           {dropdownVisible && (
-            <div>
+            <div className="dropdown">
               {wallets.map((wallet, index) => (
-                <div key={index}>
-                  <button onClick={() => handleWalletClick(wallet)}>
-                    {wallet}
-                  </button>
-                </div>
+                <button className="button" key={index} onClick={() => handleWalletClick(wallet)}>
+                  {wallet}
+                </button>
               ))}
             </div>
           )}

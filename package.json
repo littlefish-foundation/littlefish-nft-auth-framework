@@ -1,6 +1,6 @@
 {
   "name": "littlefish-nft-auth-framework-beta",
-  "version": "0.1.46",
+  "version": "0.1.48",
   "description": "Open Source NFT & Wallet Auth Framework for Cardano",
   "main": "dist/backend/index.js",
   "browser": "dist/frontend/index.js",
@@ -21,8 +21,9 @@
   },
   "scripts": {
     "build:backend": "babel src/backend --out-dir dist/backend --extensions \".ts,.tsx\" --ignore \"**/*.d.ts\",\"**/*.test.ts\",\"**/*.test.tsx\",\"**/__tests__/*\" && tsc --project ./tsconfig.json",
-    "build:frontend": "babel src/frontend --out-dir dist/frontend --extensions \".ts,.tsx\" --ignore \"**/*.d.ts\",\"**/*.test.ts\",\"**/*.test.tsx\",\"**/__tests__/*\" && tsc --project ./tsconfig.json",
+    "build:frontend": "babel src/frontend --out-dir dist/frontend --extensions \".ts,.tsx\" --ignore \"**/*.d.ts\",\"**/*.test.ts\",\"**/*.test.tsx\",\"**/__tests__/*\" && tsc --project ./tsconfig.json &&  npm run copy-css",
     "build": "npm run build:backend && npm run build:frontend",
+    "copy-css": "copyfiles -u 2 src/frontend/**/*.css dist/frontend",
     "test": "npx jest",
     "prepublish": "npm run build"
   },
@@ -125,6 +126,7 @@
     "@types/node": "^20.12.11",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.0",
+    "copyfiles": "^2.4.1",
     "i": "^0.3.7",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
