@@ -1,4 +1,4 @@
-# Next JS Implementation
+# Littlefish NFT Wallet Authentication Framework
 
 The npm package is updated to have serve both client and server functions.
 
@@ -44,7 +44,36 @@ In your “app/layout.tsx” file import the Providers and wrap your {children} 
 
 Now you are ready to use the package.
 
+## UI Components
+
+We have created two UI components that serve wallet connection and disconnection.
+These are **WalletConnectButton** and **WalletConnectPage**. Both of them can be imported from **littlefish-nft-auth-framework-beta/frontend**
+
 ## Client Types, Returned Values, and Function Descriptions
+
+### Types
+
+```typescript
+interface Asset {
+  policyID: string;
+  assetName: string;
+  amount: number;
+};
+
+interface WalletContextProps {
+  isConnected: boolean;
+  assets: Asset[];
+  connectedWalletId: string | null;
+  connectWallet: (walletName: string) => Promise<void>;
+  disconnectWallet: () => void;
+  decodeHexToAscii: (processedArray: Asset[]) => Asset[];
+  isClient: boolean;
+  wallets: string[];
+  networkID: number;
+  addresses: [string];
+};
+
+```
 
 ### Hooks
 
