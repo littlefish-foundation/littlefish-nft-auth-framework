@@ -79,7 +79,7 @@ export function processAssets(inputArray: any[]): Asset[] {
       const asset: Asset = {
         policyID: row[0],
         assetName: row[1],
-        amount: row[2],
+        amount: typeof row[2] === 'number' ? row[2] : parseInt(row[2], 10),
       };
       results.push(asset);
     } else {

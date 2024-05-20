@@ -1,4 +1,6 @@
-# Next JS Implementation
+# Littlefish NFT Wallet Authentication Framework
+
+The npm package is updated to have serve both client and server functions.
 
 Install latest Next JS version
 
@@ -14,7 +16,7 @@ For the demonstration we used the following values:
 Install littlefish npm package
 
 ```jsx
-npm install littlefish-nft-auth-framework
+npm install littlefish-nft-auth-framework-beta
 ```
 
 In your app directory create a “providers.jsx” file.
@@ -24,7 +26,7 @@ In your app directory create a “providers.jsx” file.
 
 ```jsx
 "use client"
-import { WalletProvider} from 'littlefish-nft-auth-framework';
+import { WalletProvider} from 'littlefish-nft-auth-framework-beta/frontend';
 
 export default function Providers({children}) {
   return (
@@ -42,46 +44,36 @@ In your “app/layout.tsx” file import the Providers and wrap your {children} 
 
 Now you are ready to use the package.
 
-# React App Implementation
+## UI Components
 
-Create a React project.
+We have created two UI components that serve wallet connection and disconnection.
+These are **WalletConnectButton** and **WalletConnectPage**. Both of them can be imported from **littlefish-nft-auth-framework-beta/frontend**
 
-```jsx
-npx create-react-app <YOUR-APP-NAME>
-```
+## Client Types, Returned Values, and Function Descriptions
 
-Then, install littlefish-nft-auth-framework package.
+### Types
 
-```jsx
-npm install littlefish-nft-auth-framework
-```
+```typescript
+interface Asset {
+  policyID: string;
+  assetName: string;
+  amount: number;
+};
 
-After installing the package, go to src/ directory and index.js file and add the provider like this:
-
-```jsx
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
-import { WalletProvider } from 'littlefish-nft-auth-framework';
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <WalletProvider>
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  </WalletProvider>
-);
-
-reportWebVitals();
+interface WalletContextProps {
+  isConnected: boolean;
+  assets: Asset[];
+  connectedWalletId: string | null;
+  connectWallet: (walletName: string) => Promise<void>;
+  disconnectWallet: () => void;
+  decodeHexToAscii: (processedArray: Asset[]) => Asset[];
+  isClient: boolean;
+  wallets: string[];
+  networkID: number;
+  addresses: [string];
+};
 
 ```
-
-Now you are ready to use the package.
-
-## Returned Values and Function Descriptions
 
 ### Hooks
 
@@ -111,17 +103,86 @@ Now you are ready to use the package.
   - **Returns**: `Array<Array<string>>`
   - **Description**: Converts hex-encoded assetName strings within the processed array into ASCII strings. Returns an array with elements formatted as [policyID, assetName, amount].
 
+- **`signMessage(walletName: string, isConnected: boolean, message: string, address: string)`**
+  - **Returns**: `Promise<[string, string] | void>`
+  - **Description**: uses the enabled browser wallet to sign a message to verify the ownership of the current connected wallet.
 
+## Server Types, Returned Values, and Function Descriptions
+
+### Types
+```typescript
+interface SignupOptions {
+    email?: string;
+    password?: string;
+    walletAddress?: string;
+    walletNetwork?: number;
+    signature?: string;
+    key?: string;
+    nonce?: string;
+}
+
+interface User {
+    email?: string;
+    password?: string;
+    walletAddress?: string;
+    walletNetwork?: number;
+}
+
+interface SignupResult {
+    success: boolean;
+    email?: string;
+    passwordHash?: string;
+    walletAddress?: string;
+    walletNetwork?: number;
+    error?: string;
+}
+
+interface LoginResult {
+    success: boolean;
+    error?: string;
+}
+````
+### Authentication Functions
+
+
+- **`signupUser(options: SignupOptions)`**
+    - **Returns**: SignupResult
+    - **Description**: Can sign a user up with email and password or a Cardano wallet. It verifies the ownership of the wallet by checking a signed data by the wallet.
+- **`loginUser(user: User, options: signupOptions)`**
+    - **Returns:** LoginResult
+    - **Description**: This function can validate a user with either email and password or a Cardano wallet. It also verifies the ownership of the cardano wallet by verifying the signed data.
+
+### Utility Functions
+
+- **`generateNonce()`**
+    - **Returns**: string
+    - **Description**: It provides a one time use string to sign a data to the server.
+- **`verifyWalletAddress(signature: string, key: string, message: string, hex: string)`**
+    - **Returns**: boolean
+    - **Description**: It verifies the ownership of the Cardano wallet.
+- **`hashPassword(password: string)`**
+    - **Returns**: string
+    - **Description**: This function hashes the password entered by the user.
+- - **`validateEmail(email: string)`**
+    - **Returns**: boolean
+    - **Description**: This function checks if the entered email address is valid.
+- - **`validatePassword(password: string)`**
+    - **Returns**: boolean
+    - **Description**: Checks if the entered password for:
+        - Contains at least one digit.
+        - Contains at least one lowercase letter.
+        - Contains at least one uppercase letter.
+        - Is at least 8 characters long.
 
 
 ## Example Usage
 
-The only difference between NextJS and React App usage is, when using NextJS, you need to use **"use client"** on the beginning of the pages you want to use **littlefish-nft-auth-framework** package.
+### Client Usage
 
 First you need to import the **useWallet** hook to your component.
 
 ```jsx
-import { useWallet } from "littlefish-nft-auth-framework";
+import { useWallet } from "littlefish-nft-auth-framework-beta/frontend";
 ```
 
 Use the '**useWallet()**' hook inside your component to get access to several properties and methods such as **isConnected**, **wallets**, **assets**, and functions like **connectWallet**, 00disconnectWallet**, and **decodeHexToAscii**.
@@ -132,11 +193,13 @@ const {
   disconnectWallet,
   wallets,
   assets,
+  networkID,
+  addresses,
   decodeHexToAscii,
 } = useWallet();
 ```
 
-### Wallet Connect
+#### Wallet Connect
 
 Here is an example of connecting wallet. The wallets array will be displayed to give the user the option which wallet they want to connect.
 ```jsx
@@ -150,7 +213,7 @@ After the wallet connection, these will be updated:
 - isConnected: It will be **True**
 - assets: If there are any assets in the wallet, this will be an array of arrays.
 
-### Wallet Disconnect
+#### Wallet Disconnect
 In order to disconnect wallet:
 
 ```jsx
@@ -160,7 +223,7 @@ This action will update:
 - isConnected to **False**.
 - assets to an empty array.
 
-### Displaying Assets
+#### Displaying Assets
 
 In order to display asset information and use **decodeHexToAscii** function, we initialized these states:
 ```jsx
@@ -188,3 +251,90 @@ walletAssets.map((item, index) => (
 ))
 
 ```
+
+### Server Usage
+
+All backend functions should be imported like this.
+```typescript
+import { signupUser, loginUser } from "littlefish-nft-auth-framework-beta/backend";
+```
+
+#### Signup
+
+A body is created like this and it is sent to the signupUser function. The body can either have email and password, or wallet information such as walletAddress, walletNetwork, signature, key, and nonce
+
+```typescript
+const body = await request.json();
+    const {
+        email,
+        password,
+        walletAddress,
+        walletNetwork,
+        signature,
+        key,
+        nonce
+    } = body;
+
+const result = await signupUser(body)
+````
+signupUser will return an object in the type:
+```typescript
+interface SignupResult {
+    success: boolean;
+    email?: string;
+    passwordHash?: string;
+    walletAddress?: string;
+    walletNetwork?: number;
+    error?: string;
+}
+```
+
+If the signup process is done with email and password, the returned object will have success, email, passwordHash.
+If the signup process is done with wallet information, the returned object will have success, walletAddress, walletNetwork.
+If the signup process fails it will return success and error.
+
+#### Login
+
+Login object is fed with two objects. A body is created like this and it is sent to the signupUser function. The body can either have email and password, or wallet information such as walletAddress, walletNetwork, signature, key, and nonce.
+```typescript
+const body = await request.json();
+    const {
+        email,
+        password,
+        walletAddress,
+        walletNetwork,
+        signature,
+        key,
+        nonce
+    } = body;
+
+````
+
+And a user object fetched from the used database:
+```typescript
+interface User {
+    email?: string;
+    password?: string;
+    walletAddress?: string;
+    walletNetwork?: number;
+}
+```
+The loginUser function can be used like this.
+
+```typescript
+const result = loginUser(user, body);
+```
+
+loginUser will return success and error if failed.
+
+#### Utility Functions
+
+##### Address Verification
+
+verifyWalletAddress function can be used to verify ownership of the connected wallet.
+```typescript
+const result = verifyWalletAddress(signature: string, key: string, message: string, hex: string)
+```
+
+The signature and key can be received with the frontend **signMessage** function via asking the user to sign a nonce with their wallet.
+The message is the nonce sent to the user by **signMessage** function. the hex is the reward address of the user wallet. It can be accessed via addresses of the context provider.

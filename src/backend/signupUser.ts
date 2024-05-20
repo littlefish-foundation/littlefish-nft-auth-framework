@@ -1,40 +1,30 @@
-import { hashPassword, validateEmail, validatePassword, verifyWalletAddress } from './utils/utils';
-
-function validateSignupInputs(email?: string, password?: string, walletAddress?: string) {
-    if (email && !validateEmail(email)) {
-        throw new Error("Invalid email format.");
-    }
-    if (password && !validatePassword(password)) {
-        throw new Error("Password must be a stronger.");
-    }
-}
+import { validateEmail, verifyWalletAddress } from './utils/utils';
+import { SignupOptions, SignupResult } from './types/types';
 
 export function signupUser(
-    email?: string,
-    password?: string,
-    walletAddress?: string,
-    networkID?: number,
-    signature?: string,
-    key?: string,
-    message?: string,
-): { success: boolean, email?: string, passwordHash?: string, walletAddress?: string, walletNetwork?: number, error?: string } {
+    options: SignupOptions
+): SignupResult {
     try {
-        validateSignupInputs(email, password, walletAddress);
-
-        if (walletAddress && signature && key && message && networkID) {
-            const isValidSignature = verifyWalletAddress(signature, key, message, walletAddress, networkID);
+        
+        const { email, password, walletAddress, walletNetwork, signature, key, nonce } = options;
+        if (walletAddress && signature && key && nonce && walletNetwork) {
+            const isValidSignature = verifyWalletAddress(signature, key, nonce, walletAddress);
             if (!isValidSignature) {
                 return { success: false, error: 'Invalid wallet authentication' };
             }
-            return { success: true, walletAddress, walletNetwork: networkID };
-        } else if (email && password) {
-            return { success: true, email, passwordHash: hashPassword(password) };
+            return { success: true, walletAddress, walletNetwork};
+        }
+        if (email && password) {
+            if (!validateEmail(email)) {
+                return { success: false, error: 'Invalid email format' };
+            }
+            return { success: true, email, passwordHash : password };
         }
     } catch (error) {
         if (error instanceof Error) {
             return { success: false, error: error.message || "Signup failed due to an input validation error" };
         } else {
-            return { success: false };
+            return { success: false};
         }
     }
     return { success: false, error: "Invalid signup inputs" };
