@@ -1,23 +1,21 @@
 import { assetDecoder, processAssets } from "../utils/utils";
-import { Asset } from "../types/types";
+import { Asset, Wallet } from "../types/types";
 
+// Declare a global interface for the window object to include the Cardano object
 declare global {
   interface Window {
     cardano: any;
   }
 }
 
-const expectedWallets: string[] = [
-  "nami",
-  "eternl",
-  "yoroi",
-  "flint",
-  "typhon",
-  "gerowallet",
-  "nufi",
-  "lace",
-];
-
+/**
+ * Sign a message using the specific Cardano wallet.
+ * @param walletName - The name of the wallet to use for signing.
+ * @param isConnected - A boolean indicating if the wallet is connected.
+ * @param message - The message to sign.
+ * @param address - The address to sign the message with.
+ * @returns A promise that resolves with the key and signature or void if not connected.
+ */
 export async function signMessage(
   walletName: string,
   isConnected: boolean,
@@ -29,7 +27,7 @@ export async function signMessage(
     console.error("Wallet not connected");
     return;
   }
-  console.log(walletName);
+  // Convert the message to hex
   if (message) {
     for (var i = 0, l = message.length; i < l; i++) {
       hexMessage += message.charCodeAt(i).toString(16);
@@ -45,6 +43,14 @@ export async function signMessage(
     console.error("Failed to sign the message", error);
   }
 }
+
+/**
+ * Connects to the specified wallet and fetches its assets and other details.
+ * @param walletName - The name of the wallet to connect to.
+ * @param isClient - A flag indicating if the code is running on the client side.
+ * @param isConnected - A boolean indicating if the wallet is connected.
+ * @returns A promise that resolves with the connection status, wallet name, assets, address, and network ID.
+ */
 
 export async function connectWallet(
   walletName: string,
@@ -79,6 +85,13 @@ export async function connectWallet(
   return [isConnected, walletName, walletAssets, address, networkID];
 }
 
+/**
+ * Disconnects the wallet if it is connected.
+ * @param isClient - A flag indicating if the code is running on the client side.
+ * @param isConnected - A boolean indicating if the wallet is connected.
+ * @returns A boolean indicating if the wallet is disconnected.
+ */
+
 export function disconnectWallet(
   isClient: boolean,
   isConnected: boolean
@@ -90,11 +103,34 @@ export function disconnectWallet(
   return connectionStatus;
 }
 
-export function getWallets(isClient: boolean) {
-  if (isClient && window.cardano) {
-    const installedWallets = Object.keys(window.cardano);
-    return expectedWallets.filter((wallet) =>
-      installedWallets.includes(wallet)
-    );
+/**
+ * Fetches the installed wallets on the client.
+ * @param isClient - A flag indicating if the code is running on the client side.
+ * @returns A promise that resolves with the installed wallets or null if not available.
+ */
+
+export async function getWallets(isClient: boolean): Promise<Wallet[] | null> {
+  async function walletCheck(wallet: string): Promise<Wallet | null> {
+    try {
+      // Check if the wallet has an API version and icon. If there is an API version, the wallet is a CIP-30 wallet.
+      const version = await window.cardano[wallet].apiVersion;
+      const icon = await window.cardano[wallet].icon;
+      return version ? { name: wallet, icon: icon } : null;
+    } catch (error) {
+      console.error(`Error checking wallet ${wallet}:`, error);
+      return null;
+    }
   }
+  if (isClient && window.cardano) {
+    try {
+      const installedWallets = Object.keys(window.cardano);
+      const promises = installedWallets.map(walletCheck);
+      const results = await Promise.all(promises);
+      return results.filter((wallet) => wallet !== null);
+    } catch (error) {
+      console.error("Error retrieving wallets:", error);
+      return null;
+    }
+  }
+  return null;
 }

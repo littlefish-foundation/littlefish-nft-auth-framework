@@ -1,6 +1,6 @@
 {
-  "name": "littlefish-nft-auth-framework-beta",
-  "version": "0.1.52",
+  "name": "littlefish-nft-auth-framework",
+  "version": "0.1.24",
   "description": "Open Source NFT & Wallet Auth Framework for Cardano",
   "main": "dist/backend/index.js",
   "browser": "dist/frontend/index.js",
@@ -21,7 +21,7 @@
   },
   "scripts": {
     "build:backend": "babel src/backend --out-dir dist/backend --extensions \".ts,.tsx\" --ignore \"**/*.d.ts\",\"**/*.test.ts\",\"**/*.test.tsx\",\"**/__tests__/*\" && tsc --project ./tsconfig.json",
-    "build:frontend": "babel src/frontend --out-dir dist/frontend --extensions \".ts,.tsx\" --ignore \"**/*.d.ts\",\"**/*.test.ts\",\"**/*.test.tsx\",\"**/__tests__/*\" && tsc --project ./tsconfig.json &&  npm run copy-css",
+    "build:frontend": "babel src/frontend --out-dir dist/frontend --extensions \".ts,.tsx\" --ignore \"**/*.d.ts\",\"**/*.test.ts\",\"**/*.test.tsx\",\"**/__tests__/*\" && tsc --project ./tsconfig.json && npm run copy-css",
     "build": "npm run build:backend && npm run build:frontend",
     "copy-css": "copyfiles -u 2 src/frontend/**/*.css dist/frontend",
     "test": "npx jest",
@@ -81,6 +81,10 @@
       "@babel/preset-env",
       "@babel/preset-react",
       "@babel/preset-typescript"
+    ],
+    "plugins": [
+      "@babel/plugin-transform-modules-commonjs",
+      "@babel/plugin-transform-runtime"
     ]
   },
   "repository": {
@@ -95,11 +99,8 @@
     "nft",
     "auth"
   ],
-  "peerDependencies": {
-    "react": "^18",
-    "react-dom": "^18"
-  },
   "dependencies": {
+    "@babel/runtime": "^7.24.6",
     "@cardano-foundation/cardano-verify-datasignature": "^1.0.11",
     "@prisma/client": "^5.13.0",
     "@types/jest": "^29.5.12",
@@ -115,6 +116,8 @@
   "devDependencies": {
     "@babel/cli": "^7.24.1",
     "@babel/core": "^7.24.4",
+    "@babel/plugin-transform-modules-commonjs": "^7.24.6",
+    "@babel/plugin-transform-runtime": "^7.24.6",
     "@babel/preset-env": "^7.24.4",
     "@babel/preset-react": "^7.0.0",
     "@babel/preset-typescript": "^7.24.1",
