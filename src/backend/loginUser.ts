@@ -30,13 +30,15 @@ export async function loginUser(
     assets,
   } = options;
 
-  if (stakeAddress && signature && key && nonce && walletNetwork) {
+  if (stakeAddress && signature && key && nonce) {
     const isValidSignature = verifyWalletAddress(
       signature,
       key,
       nonce,
-      stakeAddress
+      stakeAddress,
+      walletNetwork
     );
+    console.log("Valid Signature: ", isValidSignature)
     if (!isValidSignature) {
       return { success: false, error: "Invalid wallet authentication" };
     }
@@ -48,10 +50,12 @@ export async function loginUser(
     }
     if (assets) {
       const matchingAsset = findMatchingAsset(assets, user.asset);
+      console.log("Matching Asset: ", matchingAsset)
       if (!matchingAsset) {
         return { success: false, error: "Invalid asset" };
       }
-      const verified = await verifyAssetOwnership(stakeAddress, matchingAsset);
+      const verified = await verifyAssetOwnership(stakeAddress, matchingAsset, walletNetwork);
+      console.log("Verified Asset Ownership: ", verified)
       if (!verified) {
         return { success: false, error: "Asset cannot be verified on-chain" };
       }

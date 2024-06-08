@@ -10,6 +10,7 @@ export interface SignupOptions {
     key?: string;
     nonce?: string;
     authPolicies?: string[];
+    authPolicyStrict?: boolean;
 }
 
 export interface LoginOptions {

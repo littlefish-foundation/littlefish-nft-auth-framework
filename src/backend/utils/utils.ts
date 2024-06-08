@@ -24,11 +24,11 @@ async function fetchAssets(
     throw new Error(`Failed to fetch assets: ${response.statusText}`);
   }
 
-  const data: { asset: string; quantity: string }[] = await response.json();
+  const data: { unit: string; quantity: string }[] = await response.json();
 
   return data.map((item) => {
-    const policyID = item.asset.slice(0, 56);
-    const assetName = item.asset.slice(56);
+    const policyID = item.unit.slice(0, 56);
+    const assetName = item.unit.slice(56);
     const amount = Number(item.quantity);
     return { policyID, assetName, amount };
   });
@@ -43,13 +43,20 @@ export function validateEmail(email: string) {
   return regex.test(email);
 }
 
-export function convertHexToBech32(hex: string) {
+export function convertHexToBech32(hex: string, walletNetwork: number) {
   try {
     const bytes = Buffer.from(hex, "hex");
     const words = bech32.toWords(bytes);
+    console.log("Words:", words);
     try {
-      const result = bech32.encode("stake", words);
-      return result;
+      if (walletNetwork === 1) {
+        const result = bech32.encode("stake", words);
+        return result;
+      }
+      if (walletNetwork === 0) {
+        const result = bech32.encode("stake_test", words);
+        return result;
+      }
     } catch (innerError) {
       console.error("Encoding error:", innerError);
     }
@@ -67,10 +74,11 @@ export function verifyWalletAddress(
   signature: string,
   key: string,
   message: string,
-  hex: string
+  hex: string,
+  walletNetwork: number
 ): boolean {
   try {
-    const address = convertHexToBech32(hex);
+    const address = convertHexToBech32(hex, walletNetwork);
 
     return verifySignature(signature, key, message, address);
   } catch (error) {
@@ -93,7 +101,8 @@ export function generateNonce(): string {
 
 export async function verifyWalletAssets(
   assets: Asset[],
-  stakeAddress: string
+  stakeAddress: string,
+  walletNetwork: number
 ): Promise<boolean> {
   const { apiKey, networkId } = getConfig();
 
@@ -112,8 +121,8 @@ export async function verifyWalletAssets(
       asset1.amount === asset2.amount
     );
   }
-
-  const fetchedAssets = await fetchAssets(stakeAddress, apiKey, networkId);
+  const address = convertHexToBech32(stakeAddress, walletNetwork);
+  const fetchedAssets = await fetchAssets(address, apiKey, networkId);
 
   if (assets.length !== fetchedAssets.length) {
     return false;
@@ -126,9 +135,11 @@ export async function verifyWalletAssets(
 
 export async function verifyAssetPolicy(
   policyId: string,
-  stakeAddress: string
+  stakeAddress: string,
+  walletNetwork: number
 ): Promise<boolean> {
   const { apiKey, networkId } = getConfig();
+  const address = convertHexToBech32(stakeAddress, walletNetwork);
 
   if (!apiKey) {
     throw new Error("BLOCKFROST_API_KEY is not set");
@@ -138,16 +149,18 @@ export async function verifyAssetPolicy(
     throw new Error("NETWORK_ID is not set");
   }
 
-  const fetchedAssets = await fetchAssets(stakeAddress, apiKey, networkId);
+  const fetchedAssets = await fetchAssets(address, apiKey, networkId);
   // Check if the policyId exists in any of the assets
   return fetchedAssets.some((asset) => asset.policyID === policyId);
 }
 
 export async function verifyAssetOwnership(
   stakeAddress: string,
-  asset: Asset
+  asset: Asset,
+  walletNetwork: number
 ): Promise<boolean> {
   const { apiKey, networkId } = getConfig();
+  const address = convertHexToBech32(stakeAddress, walletNetwork);
 
   if (!apiKey) {
     throw new Error("BLOCKFROST_API_KEY is not set");
@@ -157,7 +170,7 @@ export async function verifyAssetOwnership(
     throw new Error("NETWORK_ID is not set");
   }
 
-  const fetchedAssets = await fetchAssets(stakeAddress, apiKey, networkId);
+  const fetchedAssets = await fetchAssets(address, apiKey, networkId);
 
   return fetchedAssets.some(
     (fetchedAsset) =>
