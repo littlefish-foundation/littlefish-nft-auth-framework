@@ -16,7 +16,7 @@ For the demonstration we used the following values:
 Install littlefish npm package
 
 ```jsx
-npm install littlefish-nft-auth-framework-beta
+npm install littlefish-nft-auth-framework
 ```
 
 In your app directory create a “providers.jsx” file.
@@ -26,7 +26,7 @@ In your app directory create a “providers.jsx” file.
 
 ```jsx
 "use client"
-import { WalletProvider} from 'littlefish-nft-auth-framework-beta/frontend';
+import { WalletProvider} from 'littlefish-nft-auth-framework/frontend';
 
 export default function Providers({children}) {
   return (
@@ -47,7 +47,7 @@ Now you are ready to use the package.
 ## UI Components
 
 We have created two UI components that serve wallet connection and disconnection.
-These are **WalletConnectButton** and **WalletConnectPage**. Both of them can be imported from **littlefish-nft-auth-framework-beta/frontend**
+These are **WalletConnectButton** and **WalletConnectPage**. Both of them can be imported from **littlefish-nft-auth-framework/frontend**
 
 ## Client Types, Returned Values, and Function Descriptions
 
@@ -60,6 +60,11 @@ interface Asset {
   amount: number;
 };
 
+interface Wallet {
+  name: string;
+  icon: string;
+};
+
 interface WalletContextProps {
   isConnected: boolean;
   assets: Asset[];
@@ -68,7 +73,7 @@ interface WalletContextProps {
   disconnectWallet: () => void;
   decodeHexToAscii: (processedArray: Asset[]) => Asset[];
   isClient: boolean;
-  wallets: string[];
+  wallets: Wallet[];
   networkID: number;
   addresses: [string];
 };
@@ -80,7 +85,7 @@ interface WalletContextProps {
 - **`useWallet()`**
   - **Returns**: An object containing:
     - `isConnected` (`boolean`): Indicates if a wallet is currently connected.
-    - `wallets` (`Array<string>`): List of detected wallet identifiers.
+    - `wallets` (`Array<Array<string, string>>`): List of detected wallet names and icons.
     - `connectedWalletId` (`string|null`): Identifier of the currently connected wallet.
     - `assets` (`Array<Array<string, string, number>>`): Decoded assets from the connected wallet, each represented as `[policyID, assetName, amount]`.
 
@@ -114,27 +119,45 @@ interface WalletContextProps {
 interface SignupOptions {
     email?: string;
     password?: string;
-    walletAddress?: string;
+    stakeAddress?: string;
     walletNetwork?: number;
+    asset?: Asset;
     signature?: string;
     key?: string;
     nonce?: string;
+    authPolicies?: string[];
+    authPolicyStrict?: boolean;
+}
+    
+interface LoginOptions {
+    email?: string;
+    password?: string;
+    stakeAddress?: string;
+    walletNetwork?: number;
+    assets?: Asset[];
+    signature?: string;
+    key?: string;
+    nonce?: string;
+    authPolicy?: string;
 }
 
 interface User {
     email?: string;
     password?: string;
-    walletAddress?: string;
+    stakeAddress?: string;
     walletNetwork?: number;
+    asset?: Asset;
 }
 
 interface SignupResult {
     success: boolean;
     email?: string;
     passwordHash?: string;
-    walletAddress?: string;
+    stakeAddress?: string;
     walletNetwork?: number;
+    asset?: Asset;
     error?: string;
+    verifiedPolicy?: string;
 }
 
 interface LoginResult {
@@ -147,10 +170,10 @@ interface LoginResult {
 
 - **`signupUser(options: SignupOptions)`**
     - **Returns**: SignupResult
-    - **Description**: Can sign a user up with email and password or a Cardano wallet. It verifies the ownership of the wallet by checking a signed data by the wallet.
+    - **Description**: Can sign a user up with email and password or a Cardano wallet or assets. It verifies the ownership of the wallet by checking a signed data by the wallet. If provided, this function makes Blockfrost API call to verify the asset is actually in the the provided wallet. If the project provides authPolicies, this function will check if the provided asset is a member of any collection of the policy IDs provided. Depending on authPolicyStrict state, it can reject authentication.
 - **`loginUser(user: User, options: signupOptions)`**
     - **Returns:** LoginResult
-    - **Description**: This function can validate a user with either email and password or a Cardano wallet. It also verifies the ownership of the cardano wallet by verifying the signed data.
+    - **Description**: This function can validate a user with either email and password or a Cardano wallet. It also verifies the ownership of the cardano wallet by verifying the signed data. If provided, this function makes Blockfrost API call to verify the asset is actually in the the provided wallet.
 
 ### Utility Functions
 
@@ -163,16 +186,38 @@ interface LoginResult {
 - **`hashPassword(password: string)`**
     - **Returns**: string
     - **Description**: This function hashes the password entered by the user.
-- - **`validateEmail(email: string)`**
+- **`validateEmail(email: string)`**
     - **Returns**: boolean
     - **Description**: This function checks if the entered email address is valid.
-- - **`validatePassword(password: string)`**
+- **`validatePassword(password: string)`**
     - **Returns**: boolean
     - **Description**: Checks if the entered password for:
         - Contains at least one digit.
         - Contains at least one lowercase letter.
         - Contains at least one uppercase letter.
         - Is at least 8 characters long.
+        
+**In order to use the next functions you need to provide blockfrost API key and network**
+```jsx
+import { setConfig } from "littlefish-nft-auth-framework/backend";
+
+
+const apiKey = "your-api-key";
+const networkId = "network-you-use"; // can be "mainnet", "preprod"
+setConfig(
+  apiKey,
+  networkId,
+);
+```
+- **`verifyAssetOwnership(stakeAddress: string, asset: Asset, walletNetwork: number`**
+    - **Returns**: Promise<boolean>
+    - **Description**: Verifies the ownership of a specific asset associated with a wallet address.
+- **`verifyAssetPolicy(policyId: string, stakeAddress: string, walletNetwork: number)`**
+    - **Returns**: Promise<boolean>
+    - **Description**: Verifies if a policy ID exists in the assets associated with a wallet address.
+- **`verifyWalletAssets(assets: Asset[], stakeAddress: string, walletNetwork: number)`**
+    - **Returns**: Promise<boolean>
+    - **Description**: Verifies the assets associated with a wallet address.
 
 
 ## Example Usage
@@ -182,7 +227,7 @@ interface LoginResult {
 First you need to import the **useWallet** hook to your component.
 
 ```jsx
-import { useWallet } from "littlefish-nft-auth-framework-beta/frontend";
+import { useWallet } from "littlefish-nft-auth-framework/frontend";
 ```
 
 Use the '**useWallet()**' hook inside your component to get access to several properties and methods such as **isConnected**, **wallets**, **assets**, and functions like **connectWallet**, 00disconnectWallet**, and **decodeHexToAscii**.
@@ -256,23 +301,26 @@ walletAssets.map((item, index) => (
 
 All backend functions should be imported like this.
 ```typescript
-import { signupUser, loginUser } from "littlefish-nft-auth-framework-beta/backend";
+import { signupUser, loginUser } from "littlefish-nft-auth-framework/backend";
 ```
 
 #### Signup
 
-A body is created like this and it is sent to the signupUser function. The body can either have email and password, or wallet information such as walletAddress, walletNetwork, signature, key, and nonce
+A body is created like this and it is sent to the signupUser function. The body can either have email and password, or wallet information such as stakeAddress, walletNetwork, signature, key, and nonce
 
 ```typescript
 const body = await request.json();
     const {
         email,
         password,
-        walletAddress,
+        stakeAddress,
         walletNetwork,
         signature,
         key,
-        nonce
+        nonce,
+        asset,
+        authPolicies,
+        authPolicyStrict,
     } = body;
 
 const result = await signupUser(body)
@@ -283,29 +331,33 @@ interface SignupResult {
     success: boolean;
     email?: string;
     passwordHash?: string;
-    walletAddress?: string;
+    stakeAddress?: string;
     walletNetwork?: number;
+    asset?: Asset;
     error?: string;
+    verifiedPolicy?: string;
 }
 ```
 
 If the signup process is done with email and password, the returned object will have success, email, passwordHash.
-If the signup process is done with wallet information, the returned object will have success, walletAddress, walletNetwork.
+If the signup process is done with wallet information, the returned object will have success, stakeAddress, walletNetwork.
+If the signup process is done with asset, the returned object will have success, stakeAddress, walletNetwork, asset, and optionally verifiedPolicy.
 If the signup process fails it will return success and error.
 
 #### Login
 
-Login object is fed with two objects. A body is created like this and it is sent to the signupUser function. The body can either have email and password, or wallet information such as walletAddress, walletNetwork, signature, key, and nonce.
+Login object is fed with two objects. A body is created like this and it is sent to the signupUser function. The body can either have email and password, or wallet information such as stakeAddress, walletNetwork, signature, key, and nonce.
 ```typescript
 const body = await request.json();
     const {
         email,
         password,
-        walletAddress,
+        stakeAddress,
         walletNetwork,
         signature,
         key,
-        nonce
+        nonce,
+        asset
     } = body;
 
 ````
@@ -315,7 +367,7 @@ And a user object fetched from the used database:
 interface User {
     email?: string;
     password?: string;
-    walletAddress?: string;
+    stakeAddress?: string;
     walletNetwork?: number;
 }
 ```

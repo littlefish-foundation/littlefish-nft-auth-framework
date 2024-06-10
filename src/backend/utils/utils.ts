@@ -5,7 +5,14 @@ import { bech32 } from "bech32";
 import { getConfig } from "../config";
 import { Asset } from "src/frontend/types/types";
 
-async function fetchAssets(
+/**
+ * Fetches assets associated with a stake address from the Blockfrost API.
+ * @param {string} stakeAddress - The stake address to fetch assets for.
+ * @param {string} apiKey - The Blockfrost API key.
+ * @param {string} networkId - The network identifier (mainnet or testnet).
+ * @returns {Promise<Asset[]>} - A promise that resolves to an array of assets.
+ */
+export async function fetchAssets(
   stakeAddress: string,
   apiKey: string,
   networkId: string
@@ -34,20 +41,35 @@ async function fetchAssets(
   });
 }
 
+/**
+ * Checks if a string is non-empty.
+ * @param {string} str - The string to check.
+ * @returns {boolean} - True if the string is non-empty, false otherwise.
+ */
 export function isNonEmptyString(str: string): boolean {
   return typeof str === "string" && str.trim() !== "";
 }
 
+/**
+ * Validates an email address.
+ * @param {string} email - The email address to validate.
+ * @returns {boolean} - True if the email is valid, false otherwise.
+ */
 export function validateEmail(email: string) {
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return regex.test(email);
 }
 
+/**
+ * Converts a hexadecimal string to a bech32 address.
+ * @param {string} hex - The hexadecimal string to convert.
+ * @param {number} walletNetwork - The network identifier (1 for mainnet, 0 for testnet).
+ * @returns {string | undefined} - The bech32 address or undefined if conversion fails.
+ */
 export function convertHexToBech32(hex: string, walletNetwork: number) {
   try {
     const bytes = Buffer.from(hex, "hex");
     const words = bech32.toWords(bytes);
-    console.log("Words:", words);
     try {
       if (walletNetwork === 1) {
         const result = bech32.encode("stake", words);
@@ -65,11 +87,26 @@ export function convertHexToBech32(hex: string, walletNetwork: number) {
   }
 }
 
+/**
+ * Validates a password against a regex pattern.
+ * @param {string} password - The password to validate.
+ * @returns {boolean} - True if the password is valid, false otherwise.
+ */
+
 export function validatePassword(password: string) {
   const regex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[A-Za-z/d@$!%*?&].{8,}$/;
   return regex.test(password);
 }
 
+/**
+ * Verifies a wallet address using a signature, key, message, and hex string.
+ * @param {string} signature - The signature to verify.
+ * @param {string} key - The key to use for verification.
+ * @param {string} message - The message to verify.
+ * @param {string} hex - The hex string to convert to a bech32 address.
+ * @param {number} walletNetwork - The network identifier (1 for mainnet, 0 for testnet).
+ * @returns {boolean} - True if the verification is successful, false otherwise.
+ */
 export function verifyWalletAddress(
   signature: string,
   key: string,
@@ -87,18 +124,40 @@ export function verifyWalletAddress(
   }
 }
 
+/**
+ * Hashes a password using bcrypt.
+ * @param {string} password - The password to hash.
+ * @returns {string} - The hashed password.
+ */
 export function hashPassword(password: string): string {
   return bcrypt.hashSync(password, 10);
 }
 
+/**
+ * Verifies a password against a hashed password using bcrypt.
+ * @param {string} password - The password to verify.
+ * @param {string} hash - The hashed password to compare against.
+ * @returns {boolean} - True if the password matches the hash, false otherwise.
+ */
 export function verifyPassword(password: string, hash: string): boolean {
   return bcrypt.compareSync(password, hash);
 }
 
+/**
+ * Generates a random nonce.
+ * @returns {string} - A 16-byte hex string.
+ */
 export function generateNonce(): string {
   return randomBytes(16).toString("hex"); // Generate a 16-byte hex string
 }
 
+/**
+ * Verifies the assets associated with a wallet address.
+ * @param {Asset[]} assets - The assets to verify.
+ * @param {string} stakeAddress - The stake address of the wallet.
+ * @param {number} walletNetwork - The network identifier (1 for mainnet, 0 for testnet).
+ * @returns {Promise<boolean>} - A promise that resolves to true if the assets are verified, false otherwise.
+ */
 export async function verifyWalletAssets(
   assets: Asset[],
   stakeAddress: string,
@@ -133,6 +192,13 @@ export async function verifyWalletAssets(
   );
 }
 
+/**
+ * Verifies if a policy ID exists in the assets associated with a wallet address.
+ * @param {string} policyId - The policy ID to verify.
+ * @param {string} stakeAddress - The stake address of the wallet.
+ * @param {number} walletNetwork - The network identifier (1 for mainnet, 0 for testnet).
+ * @returns {Promise<boolean>} - A promise that resolves to true if the policy ID is found, false otherwise.
+ */
 export async function verifyAssetPolicy(
   policyId: string,
   stakeAddress: string,
@@ -154,6 +220,13 @@ export async function verifyAssetPolicy(
   return fetchedAssets.some((asset) => asset.policyID === policyId);
 }
 
+/**
+ * Verifies the ownership of a specific asset associated with a wallet address.
+ * @param {string} stakeAddress - The stake address of the wallet.
+ * @param {Asset} asset - The asset to verify.
+ * @param {number} walletNetwork - The network identifier (1 for mainnet, 0 for testnet).
+ * @returns {Promise<boolean>} - A promise that resolves to true if the asset is verified, false otherwise.
+ */
 export async function verifyAssetOwnership(
   stakeAddress: string,
   asset: Asset,
@@ -180,6 +253,12 @@ export async function verifyAssetOwnership(
   );
 }
 
+/**
+ * Finds a matching asset in a list of assets.
+ * @param {Asset[]} assets - The list of assets to search.
+ * @param {Asset} userAsset - The asset to find a match for.
+ * @returns {Asset | null} - The matching asset or null if no match is found.
+ */
 export function findMatchingAsset(
   assets: Asset[],
   userasset: Asset

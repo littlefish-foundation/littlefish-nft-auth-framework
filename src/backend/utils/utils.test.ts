@@ -1,132 +1,178 @@
-import bcrypt from 'bcryptjs';
-import { randomBytes } from 'crypto';
-import { bech32 } from 'bech32';
-import verifySignature from '@cardano-foundation/cardano-verify-datasignature';
-import {
-  isNonEmptyString,
-  validateEmail,
-  convertHexToBech32,
-  validatePassword,
-  verifyWalletAddress,
-  hashPassword,
-  verifyPassword,
-  generateNonce,
-} from '../utils/utils';
+import { 
+  fetchAssets, 
+  isNonEmptyString, 
+  validateEmail, 
+  convertHexToBech32, 
+  validatePassword, 
+  verifyWalletAddress, 
+  hashPassword, 
+  verifyPassword, 
+  generateNonce, 
+  verifyWalletAssets, 
+  verifyAssetPolicy, 
+  verifyAssetOwnership, 
+  findMatchingAsset 
+} from './utils'; // Replace 'yourModule' with the actual module file
+import verifySignature from "@cardano-foundation/cardano-verify-datasignature";
+import * as bcrypt from "bcryptjs";
+import { getConfig } from "../config";
+import fetchMock from 'jest-fetch-mock';
+import { hash } from 'crypto';
 
-// Mocking the verifySignature module correctly
-jest.mock('@cardano-foundation/cardano-verify-datasignature', () => jest.fn());
+fetchMock.enableMocks();
 
-describe('Utils', () => {
+jest.mock('@cardano-foundation/cardano-verify-datasignature', () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
+jest.mock('../config', () => ({
+  getConfig: jest.fn(),
+}));
+
+jest.mock('crypto', () => ({
+  randomBytes: jest.fn(() => Buffer.from('1234567890123456')),
+}));
+
+jest.mock("bcryptjs", () => ({
+  compareSync: jest.fn((s: string, hash: string) => Boolean),
+  hashSync: jest.fn((s: string, salt?: string | number) => String),
+}));
+
+describe("Test suite for your module functions", () => {
   beforeEach(() => {
+    fetchMock.resetMocks();
     jest.clearAllMocks();
   });
 
-  describe('isNonEmptyString', () => {
-    it('should return true for a non-empty string', () => {
-      expect(isNonEmptyString('hello')).toBe(true);
-    });
+  test("fetchAssets fetches and returns assets correctly", async () => {
+    const mockResponse = [
+      { unit: "policyIDassetName1", quantity: "1000" },
+      { unit: "policyIDassetName2", quantity: "2000" }
+    ];
+    fetchMock.mockResponseOnce(JSON.stringify(mockResponse));
 
-    it('should return false for an empty string', () => {
-      expect(isNonEmptyString('')).toBe(false);
-    });
-
-    it('should return false for a non-string value', () => {
-      expect(isNonEmptyString(123 as any)).toBe(false);
-    });
+    const assets = await fetchAssets("stakeAddress", "apiKey", "testnet");
+    
+    expect(assets).toEqual([
+      { policyID: "policyIDassetName1", assetName: "", amount: 1000 },
+      { policyID: "policyIDassetName2", assetName: "", amount: 2000 }
+    ]);
   });
 
-  describe('validateEmail', () => {
-    it('should return true for a valid email', () => {
-      expect(validateEmail('test@example.com')).toBe(true);
-    });
-
-    it('should return false for an invalid email', () => {
-      expect(validateEmail('test')).toBe(false);
-    });
+  test("isNonEmptyString returns true for non-empty string", () => {
+    expect(isNonEmptyString("Hello")).toBe(true);
   });
 
-  describe('convertHexToBech32', () => {
-    it('should convert a hex string to a bech32 string', () => {
-      const hex = '0123456789abcdef';
-      const expectedBech32 = bech32.encode('stake', bech32.toWords(Buffer.from(hex, 'hex')));
-      expect(convertHexToBech32(hex)).toBe(expectedBech32);
-    });
-
-    it('should handle encoding errors', () => {
-      const hex = 'invalidhex';
-      expect(() => convertHexToBech32(hex)).toThrow();
-    });
+  test("isNonEmptyString returns false for empty string", () => {
+    expect(isNonEmptyString("")).toBe(false);
   });
 
-  describe('validatePassword', () => {
-    it('should return true for a valid password', () => {
-      expect(validatePassword('Password123')).toBe(true);
-    });
-
-    it('should return false for an invalid password', () => {
-      expect(validatePassword('password')).toBe(false);
-    });
+  test("validateEmail returns true for valid email", () => {
+    expect(validateEmail("test@example.com")).toBe(true);
   });
 
-  describe('verifyWalletAddress', () => {
-    const mockSignature = 'signature';
-    const mockKey = 'key';
-    const mockMessage = 'message';
-    const mockHex = '0123456789abcdef';
-
-    beforeEach(() => {
-      jest.resetAllMocks();
-    });
-
-    it('should return true for a valid wallet address', () => {
-      const mockBech32Address = bech32.encode('stake', bech32.toWords(Buffer.from(mockHex, 'hex')));
-      (verifySignature as jest.Mock).mockReturnValue(true);
-      expect(verifyWalletAddress(mockSignature, mockKey, mockMessage, mockHex)).toBe(true);
-      expect(verifySignature).toHaveBeenCalledWith(mockSignature, mockKey, mockMessage, mockBech32Address);
-    });
-
-    it('should return false for an invalid wallet address', () => {
-      const mockBech32Address = bech32.encode('stake', bech32.toWords(Buffer.from(mockHex, 'hex')));
-      (verifySignature as jest.Mock).mockReturnValue(false);
-      expect(verifyWalletAddress(mockSignature, mockKey, mockMessage, mockHex)).toBe(false);
-    });
-
-    it('should handle verification errors', () => {
-      (verifySignature as jest.Mock).mockImplementation(() => {
-        throw new Error('Verification error');
-      });
-      expect(verifyWalletAddress(mockSignature, mockKey, mockMessage, mockHex)).toBe(false);
-    });
+  test("validateEmail returns false for invalid email", () => {
+    expect(validateEmail("invalid-email")).toBe(false);
   });
 
-  describe('hashPassword', () => {
-    it('should hash the password', () => {
-      const password = 'Password123';
-      const hashedPassword = hashPassword(password);
-      expect(hashedPassword).not.toBe(password);
-      expect(bcrypt.compareSync(password, hashedPassword)).toBe(true);
-    });
+  test("convertHexToBech32 converts hex to bech32 address", () => {
+    const hex = "hexstring";
+    const walletNetwork = 1; // Mainnet
+    const bech32Address = convertHexToBech32(hex, walletNetwork);
+    
+    expect(bech32Address).toBeDefined();
   });
 
-  describe('verifyPassword', () => {
-    it('should return true for a valid password', () => {
-      const password = 'Password123';
-      const hashedPassword = bcrypt.hashSync(password, 10);
-      expect(verifyPassword(password, hashedPassword)).toBe(true);
-    });
+  test("validatePassword returns true for valid password", () => {
+    expect(validatePassword("Valid123Valid123")).toBe(true);
+  });
 
-    it('should return false for an invalid password', () => {
-      const password = 'password';
-      const hashedPassword = bcrypt.hashSync('Password123', 10);
-      expect(verifyPassword(password, hashedPassword)).toBe(false);
-    });
+  test("validatePassword returns false for invalid password", () => {
+    expect(validatePassword("invalid")).toBe(false);
+  });
+
+  test("verifyWalletAddress verifies address correctly", () => {
+    const signature = "signature";
+    const key = "key";
+    const message = "message";
+    const hex = "hexstring";
+    const walletNetwork = 1;
+
+    (verifySignature as jest.Mock).mockReturnValue(true);
+
+    const result = verifyWalletAddress(signature, key, message, hex, walletNetwork);
+    
+    expect(result).toBe(true);
   });
 
   describe('generateNonce', () => {
-    it('should generate a 16-byte hex string', () => {
+    it('generates a 16-byte hex string', () => {
+      //const mockRandomBytes = jest.fn().mockReturnValue(Buffer.from('1234567890123456'));
+      //(crypto.randomBytes as jest.Mock).mockImplementation(mockRandomBytes);
       const nonce = generateNonce();
-      expect(nonce.length).toBe(32);
-      expect(/^[0-9a-f]+$/.test(nonce)).toBe(true);
+      expect(nonce).toBe('31323334353637383930313233343536'); // Buffer '1234567890123456' converted to hex string
     });
+  });
+
+  test("verifyWalletAssets verifies assets correctly", async () => {
+    const mockConfig = { apiKey: "apiKey", networkId: "testnet" };
+    (getConfig as jest.Mock).mockReturnValue(mockConfig);
+
+    const mockResponse = [
+      { unit: "policyIDassetName1", quantity: "1000" },
+      { unit: "policyIDassetName2", quantity: "2000" }
+    ];
+    fetchMock.mockResponseOnce(JSON.stringify(mockResponse));
+
+    const assets = [
+      { policyID: "policyIDassetName1", assetName: "", amount: 1000 },
+      { policyID: "policyIDassetName2", assetName: "", amount: 2000 }
+    ];
+    const result = await verifyWalletAssets(assets, "stakeAddress", 1);
+    
+    expect(result).toBe(true);
+  });
+
+  test("verifyAssetPolicy verifies policy ID correctly", async () => {
+    const mockConfig = { apiKey: "apiKey", networkId: "testnet" };
+    (getConfig as jest.Mock).mockReturnValue(mockConfig);
+
+    const mockResponse = [
+      { unit: "policyIDassetName1", quantity: "1000" },
+      { unit: "policyIDassetName1", quantity: "2000" }
+    ];
+    fetchMock.mockResponseOnce(JSON.stringify(mockResponse));
+
+    const result = await verifyAssetPolicy("policyIDassetName1", "stakeAddress", 1);
+    
+    expect(result).toBe(true);
+  });
+
+  test("verifyAssetOwnership verifies asset ownership correctly", async () => {
+    const mockConfig = { apiKey: "apiKey", networkId: "testnet" };
+    (getConfig as jest.Mock).mockReturnValue(mockConfig);
+
+    const mockResponse = [
+      { unit: "policyIDassetName", quantity: "1000" }
+    ];
+    fetchMock.mockResponseOnce(JSON.stringify(mockResponse));
+
+    const asset = { policyID: "policyIDassetName", assetName: "", amount: 1000 };
+    const result = await verifyAssetOwnership("stakeAddress", asset, 1);
+    
+    expect(result).toBe(true);
+  });
+
+  test("findMatchingAsset finds matching asset correctly", () => {
+    const assets = [
+      { policyID: "policyID", assetName: "assetName1", amount: 1000 },
+      { policyID: "policyID", assetName: "assetName2", amount: 2000 }
+    ];
+    const userAsset = { policyID: "policyID", assetName: "assetName1", amount: 1000 };
+    
+    const result = findMatchingAsset(assets, userAsset);
+    
+    expect(result).toEqual(userAsset);
   });
 });

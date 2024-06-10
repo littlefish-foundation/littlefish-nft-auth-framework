@@ -1,115 +1,227 @@
 import { loginUser } from './loginUser';
-import { verifyPassword, verifyWalletAddress, validateEmail, isNonEmptyString } from './utils/utils';
-import { SignupOptions, LoginResult, User } from './types/types';
+import { verifyPassword, verifyWalletAddress, validateEmail, findMatchingAsset, verifyAssetOwnership } from './utils/utils';
+import { LoginOptions, LoginResult, User } from './types/types';
+import { Asset } from '../frontend/types/types';
 
-// Mock the utils functions
-jest.mock('./utils/utils', () => ({
-  verifyPassword: jest.fn(),
-  verifyWalletAddress: jest.fn(),
-  validateEmail: jest.fn(),
-  isNonEmptyString: jest.fn(),
+// Mock dependencies
+jest.mock('./utils/utils');
+
+jest.mock('bech32', () => ({
+  encode: jest.fn(),
+  toWords: jest.fn().mockReturnValue([]) // mock other functions as needed
 }));
 
-describe('loginUser', () => {
-  const user: User = {
-    email: 'user@example.com',
-    password: 'hashed_password',
-    walletAddress: 'user_wallet_address',
-    walletNetwork: 1,
-  };
+jest.mock('bcryptjs', () => ({
+  hashSync: jest.fn(),
+  compareSync: jest.fn()
+}));
 
+jest.mock('@cardano-foundation/cardano-verify-datasignature', () => ({
+  verifySignature: jest.fn()
+}));
+
+jest.mock('crypto', () => ({
+  randomBytes: jest.fn()
+}));
+
+
+
+const mockVerifyPassword = verifyPassword as jest.MockedFunction<typeof verifyPassword>;
+const mockVerifyWalletAddress = verifyWalletAddress as jest.MockedFunction<typeof verifyWalletAddress>;
+const mockValidateEmail = validateEmail as jest.MockedFunction<typeof validateEmail>;
+const mockFindMatchingAsset = findMatchingAsset as jest.MockedFunction<typeof findMatchingAsset>;
+const mockVerifyAssetOwnership = verifyAssetOwnership as jest.MockedFunction<typeof verifyAssetOwnership>;
+
+describe('loginUser', () => {
   beforeEach(() => {
-    // Reset all mocks before each test
     jest.clearAllMocks();
   });
 
-  it('should authenticate user with correct email and password', () => {
-    (validateEmail as jest.Mock).mockReturnValue(true);
-    (isNonEmptyString as jest.Mock).mockReturnValue(true);
-    (verifyPassword as jest.Mock).mockReturnValue(true);
+  const user: User = {
+    email: 'test@example.com',
+    password: 'hashed_password',
+    stakeAddress: 'stake1uxyz',
+    walletNetwork: 1,
+    asset: { policyID: 'policy1', assetName: 'asset1', amount: 1 }
+  };
 
-    const options: SignupOptions = { email: 'user@example.com', password: 'password123' };
-    const result: LoginResult = loginUser(user, options);
+  test('should authenticate user with valid email and password', async () => {
+    const options: LoginOptions = { email: 'test@example.com', password: 'password123' };
+    mockValidateEmail.mockReturnValue(true);
+    mockVerifyPassword.mockReturnValue(true);
 
-    expect(validateEmail).toHaveBeenCalledWith(options.email);
-    expect(isNonEmptyString).toHaveBeenCalledWith(options.password);
-    expect(verifyPassword).toHaveBeenCalledWith(options.password, user.password);
+    const result: LoginResult = await loginUser(user, options);
+
     expect(result).toEqual({ success: true });
+    expect(mockValidateEmail).toHaveBeenCalledWith(options.email);
+    expect(mockVerifyPassword).toHaveBeenCalledWith(options.password, user.password);
   });
 
-  it('should fail authentication with incorrect email format', () => {
-    (validateEmail as jest.Mock).mockReturnValue(false);
+  test('should return error for invalid email format', async () => {
+    const options: LoginOptions = { email: 'invalid-email', password: 'password123' };
+    mockValidateEmail.mockReturnValue(false);
 
-    const options: SignupOptions = { email: 'bad_email', password: 'password123' };
-    const result: LoginResult = loginUser(user, options);
+    const result: LoginResult = await loginUser(user, options);
 
-    expect(validateEmail).toHaveBeenCalledWith(options.email);
+    expect(result).toEqual({ success: false, error: 'Invalid email or email format' });
+    expect(mockValidateEmail).toHaveBeenCalledWith(options.email);
+  });
+
+  test('should return error for incorrect email', async () => {
+    const options: LoginOptions = { email: 'wrong@example.com', password: 'password123' };
+    mockValidateEmail.mockReturnValue(true);
+
+    const result: LoginResult = await loginUser(user, options);
+
     expect(result).toEqual({ success: false, error: 'Invalid email or email format' });
   });
 
-  it('should fail authentication with incorrect password', () => {
-    (validateEmail as jest.Mock).mockReturnValue(true);
-    (isNonEmptyString as jest.Mock).mockReturnValue(true);
-    (verifyPassword as jest.Mock).mockReturnValue(false);
+  test('should return error for incorrect password', async () => {
+    const options: LoginOptions = { email: 'test@example.com', password: 'wrongpassword' };
+    mockValidateEmail.mockReturnValue(true);
+    mockVerifyPassword.mockReturnValue(false);
 
-    const options: SignupOptions = { email: 'user@example.com', password: 'wrongpassword' };
-    const result: LoginResult = loginUser(user, options);
+    const result: LoginResult = await loginUser(user, options);
 
-    expect(validateEmail).toHaveBeenCalledWith(options.email);
-    expect(isNonEmptyString).toHaveBeenCalledWith(options.password);
-    expect(verifyPassword).toHaveBeenCalledWith(options.password, user.password);
     expect(result).toEqual({ success: false, error: 'Invalid password' });
+    expect(mockVerifyPassword).toHaveBeenCalledWith(options.password, user.password);
   });
 
-  it('should authenticate user with correct wallet information', () => {
-    (verifyWalletAddress as jest.Mock).mockReturnValue(true);
-
-    const options: SignupOptions = {
-      walletAddress: 'user_wallet_address',
+  test('should authenticate user with valid wallet address and signature', async () => {
+    const options: LoginOptions = {
+      stakeAddress: 'stake1uxyz',
       walletNetwork: 1,
-      signature: 'valid_signature',
-      key: 'valid_key',
-      nonce: 'valid_nonce',
+      signature: 'signature',
+      key: 'key',
+      nonce: 'nonce'
     };
-    const result: LoginResult = loginUser(user, options);
+    mockVerifyWalletAddress.mockReturnValue(true);
 
-    expect(verifyWalletAddress).toHaveBeenCalledWith(options.signature, options.key, options.nonce, options.walletAddress);
+    const result: LoginResult = await loginUser(user, options);
+
     expect(result).toEqual({ success: true });
+    expect(mockVerifyWalletAddress).toHaveBeenCalledWith(
+      options.signature,
+      options.key,
+      options.nonce,
+      options.stakeAddress,
+      options.walletNetwork
+    );
   });
 
-  it('should fail authentication with invalid wallet signature', () => {
-    (verifyWalletAddress as jest.Mock).mockReturnValue(false);
-
-    const options: SignupOptions = {
-      walletAddress: 'user_wallet_address',
+  test('should return error for invalid wallet signature', async () => {
+    const options: LoginOptions = {
+      stakeAddress: 'stake1uxyz',
       walletNetwork: 1,
-      signature: 'invalid_signature',
-      key: 'valid_key',
-      nonce: 'valid_nonce',
+      signature: 'invalid-signature',
+      key: 'key',
+      nonce: 'nonce'
     };
-    const result: LoginResult = loginUser(user, options);
+    mockVerifyWalletAddress.mockReturnValue(false);
 
-    expect(verifyWalletAddress).toHaveBeenCalledWith(options.signature, options.key, options.nonce, options.walletAddress);
+    const result: LoginResult = await loginUser(user, options);
+
     expect(result).toEqual({ success: false, error: 'Invalid wallet authentication' });
+    expect(mockVerifyWalletAddress).toHaveBeenCalledWith(
+      options.signature,
+      options.key,
+      options.nonce,
+      options.stakeAddress,
+      options.walletNetwork
+    );
   });
 
-  it('should fail authentication with incorrect wallet address or network', () => {
-    const options: SignupOptions = {
-      walletAddress: 'incorrect_wallet_address',
-      walletNetwork: 2,
-      signature: 'valid_signature',
-      key: 'valid_key',
-      nonce: 'valid_nonce',
+  test('should return error for mismatched stake address or network', async () => {
+    const options: LoginOptions = {
+      stakeAddress: 'different_stake_address',
+      walletNetwork: 1,
+      signature: 'signature',
+      key: 'key',
+      nonce: 'nonce'
     };
-    const result: LoginResult = loginUser(user, options);
+    mockVerifyWalletAddress.mockReturnValue(true);
+
+    const result: LoginResult = await loginUser(user, options);
 
     expect(result).toEqual({ success: false, error: 'Invalid network or wallet address' });
   });
 
-  it('should fail authentication with missing credentials', () => {
-    const options: SignupOptions = {};
-    const result: LoginResult = loginUser(user, options);
+  test('should authenticate user with valid wallet address and asset ownership', async () => {
+    const options: LoginOptions = {
+      stakeAddress: 'stake1uxyz',
+      walletNetwork: 1,
+      signature: 'signature',
+      key: 'key',
+      nonce: 'nonce',
+      assets: [{ policyID: 'policy1', assetName: 'asset1', amount: 1 }]
+    };
+    mockVerifyWalletAddress.mockReturnValue(true);
+    mockFindMatchingAsset.mockReturnValue(options.assets[0]);
+    mockVerifyAssetOwnership.mockResolvedValue(true);
 
+    const result: LoginResult = await loginUser(user, options);
+
+    expect(result).toEqual({ success: true });
+    expect(mockVerifyWalletAddress).toHaveBeenCalledWith(
+      options.signature,
+      options.key,
+      options.nonce,
+      options.stakeAddress,
+      options.walletNetwork
+    );
+    expect(mockFindMatchingAsset).toHaveBeenCalledWith(options.assets, user.asset);
+    expect(mockVerifyAssetOwnership).toHaveBeenCalledWith(
+      options.stakeAddress,
+      options.assets[0],
+      options.walletNetwork
+    );
+  });
+
+  test('should return error for unmatched asset', async () => {
+    const options: LoginOptions = {
+      stakeAddress: 'stake1uxyz',
+      walletNetwork: 1,
+      signature: 'signature',
+      key: 'key',
+      nonce: 'nonce',
+      assets: [{ policyID: 'policy2', assetName: 'asset2', amount: 1 }]
+    };
+    mockVerifyWalletAddress.mockReturnValue(true);
+    mockFindMatchingAsset.mockReturnValue(null);
+
+    const result: LoginResult = await loginUser(user, options);
+
+    expect(result).toEqual({ success: false, error: 'Invalid asset' });
+    expect(mockFindMatchingAsset).toHaveBeenCalledWith(options.assets, user.asset);
+  });
+
+  test('should return error for asset verification failure', async () => {
+    const options: LoginOptions = {
+      stakeAddress: 'stake1uxyz',
+      walletNetwork: 1,
+      signature: 'signature',
+      key: 'key',
+      nonce: 'nonce',
+      assets: [{ policyID: 'policy1', assetName: 'asset1', amount: 1 }]
+    };
+    mockVerifyWalletAddress.mockReturnValue(true);
+    mockFindMatchingAsset.mockReturnValue(options.assets[0]);
+    mockVerifyAssetOwnership.mockResolvedValue(false);
+
+    const result: LoginResult = await loginUser(user, options);
+
+    expect(result).toEqual({ success: false, error: 'Asset cannot be verified on-chain' });
+    expect(mockFindMatchingAsset).toHaveBeenCalledWith(options.assets, user.asset);
+    expect(mockVerifyAssetOwnership).toHaveBeenCalledWith(
+      options.stakeAddress,
+      options.assets[0],
+      options.walletNetwork
+    );
+  });
+
+  test('should return error for invalid login inputs', async () => {
+    const options: LoginOptions = {};
+    const result: LoginResult = await loginUser(user, options);
     expect(result).toEqual({ success: false, error: 'Invalid login inputs' });
   });
 });

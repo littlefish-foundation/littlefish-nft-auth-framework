@@ -1,14 +1,16 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useWallet } from "../contexts/WalletContext";
 import "./walletConnectButton.css";
-import { Wallet } from "../types/types";
+import { Wallet, Asset } from "../types/types";
 
 /**
  * A component that displays a button to connect to a wallet.
  */
 
-const WalletConnectButton: React.FC = () => {
+const WalletConnectButton: React.FC<{
+  onAssetSelect: (asset: Asset) => void;
+}> = ({ onAssetSelect }) => {
   // Use the wallet context to get the wallets, connection status, and connect/disconnect functions
   const {
     wallets, // The wallets available to connect to
@@ -16,10 +18,20 @@ const WalletConnectButton: React.FC = () => {
     connectWallet, // A function to connect to a wallet
     disconnectWallet, // A function to disconnect the wallet
     connectedWalletId, // The ID of the connected wallet
+    assets, // The assets associated with the connected wallet
+    decodeHexToAscii, // A function to decode hex strings to ASCII
   } = useWallet();
+  const [decodedAssets, setDecodedAssets] = useState<Asset[]>([]);
+
+  useEffect(() => {
+    if (assets && Array.isArray(assets)) {
+      setDecodedAssets(decodeHexToAscii(assets));
+    }
+  }, [assets]);
 
   // State to manage the visibility of the dropdown
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [assetDropdownVisible, setAssetDropdownVisible] = useState(false);
 
   // State to manage the wallet name and icon
   const [walletName, setWalletName] = useState<string>("");
@@ -38,12 +50,41 @@ const WalletConnectButton: React.FC = () => {
     setDropdownVisible(false); // Close the dropdown after selecting a wallet
   };
 
+  const handleAssetDropdownClick = () => {
+    setAssetDropdownVisible(!assetDropdownVisible);
+  };
+
+  const handleAssetClick = (asset: Asset) => {
+    onAssetSelect(asset);
+    setAssetDropdownVisible(false);
+  };
+
   return (
     <div className="container">
       {isConnected ? (
-        <button className="button" onClick={() => disconnectWallet()}>
-          Disconnect {connectedWalletId}
-        </button>
+        <>
+          <button className="button" onClick={() => disconnectWallet()}>
+            Disconnect {connectedWalletId}
+          </button>
+          {assets.length > 0 && (
+            <button className="button" onClick={() => handleAssetDropdownClick()}>
+              <p>You can signup with Asset</p>
+            </button>
+          )}
+          {assetDropdownVisible && (
+            <div className="dropdown">
+              {decodedAssets.map((asset, index) => (
+                <button
+                  className="button"
+                  key={index}
+                  onClick={() => handleAssetClick(asset)}
+                >
+                  <p className="assetName">Select {asset.assetName}</p>
+                </button>
+              ))}
+            </div>
+          )}
+        </>
       ) : (
         // Display the connect button and the dropdown menu if the wallet is not connected
         <div>
@@ -72,5 +113,4 @@ const WalletConnectButton: React.FC = () => {
     </div>
   );
 };
-
 export default WalletConnectButton;

@@ -1,10 +1,15 @@
 import cbor from "cbor-js";
 import { Asset } from "../types/types";
 
+/**
+ * Decodes assets names from hex string to ASCII.
+ * @param {Asset[]} processedArray - The array of assets to decode.
+ * @returns {Asset[]} - The array of assets with decoded named assets.
+ */
 export function decodeHexToAscii(processedArray: Asset[]): Asset[] {
   return processedArray.map((item) => {
     const { policyID, assetName, amount } = item;
-    const decodedAssetName = hexToString(assetName);
+    const decodedAssetName = hexToString(assetName); // Decode the hex asset name to a string
     return {
       policyID: policyID,
       assetName: decodedAssetName,
@@ -13,6 +18,11 @@ export function decodeHexToAscii(processedArray: Asset[]): Asset[] {
   });
 }
 
+/**
+ * Helper function that converts a hexadecimal string to ASCII.
+ * @param {string} hex - The hexadecimal string to convert.
+ * @returns {string} - The ASCII string.
+ */
 export function hexToString(hex: string): string {
   const hexes = hex.match(/.{1,2}/g) || [];
   let result = "";
@@ -22,13 +32,20 @@ export function hexToString(hex: string): string {
   return result;
 }
 
+/**
+ * Decodes the assets from a hexadecimal string.
+ * @param {string[]} hexDataArray - The array of hexadecimal strings to decode.
+ * @returns {any[]} - The array of decoded assets.
+ */
 export function assetDecoder(hexDataArray: string[]): any[] {
   let results: any[] = [];
 
   hexDataArray.forEach((hexData) => {
+    // Convert the hexadecimal string to a byte array
     const bytes = new Uint8Array(
       hexData.match(/[\da-f]{2}/gi)?.map((h) => parseInt(h, 16)) || []
     );
+    // Decode the byte array using CBOR
     const decoded = cbor.decode(bytes.buffer);
 
     decoded.forEach((utxo: any[]) => {
@@ -36,12 +53,14 @@ export function assetDecoder(hexDataArray: string[]): any[] {
         const [binaryData, details] = utxo;
         const [amount, assets] = details;
         let assetResults: any[] = [];
+        // Process each asset
         Object.entries(assets).forEach(([key, val]) => {
           if (typeof key === "string") {
             const keyBytes = new Uint8Array(key.split(",").map(Number));
             const keyHex: string = byteArrayToHex(keyBytes);
             let assetDetail: any[] = [keyHex];
             let details: any[] = [];
+            // Process each detail
             Object.entries(val as { [s: string]: unknown }).forEach(
               ([innerKey, innerVal], index, array) => {
                 if (typeof innerKey === "string") {
@@ -64,12 +83,22 @@ export function assetDecoder(hexDataArray: string[]): any[] {
   return results;
 }
 
+/**
+ * Helper function that converts a byte array to a hexadecimal string.
+ * @param {Uint8Array} buffer - The byte array to convert.
+ * @returns {string} - The hexadecimal string.
+ */
 export function byteArrayToHex(buffer: Uint8Array): string {
   return Array.from(buffer, (byte) => byte.toString(16).padStart(2, "0")).join(
     ""
   );
 }
 
+/**
+ * Function to process asset data and convert it to Asset objects.
+ * @param {any[]} inputArray - The array of rows to process.
+ * @returns {Asset[]} - The array of processed assets.
+ */
 export function processAssets(inputArray: any[]): Asset[] {
   const results: Asset[] = [];
 
