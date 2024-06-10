@@ -68,7 +68,7 @@ const WalletConnectButton: React.FC<{
           </button>
           {assets.length > 0 && (
             <button className="button" onClick={() => handleAssetDropdownClick()}>
-              <p>You can signup with Asset</p>
+              <p>You can authenticate with Asset</p>
             </button>
           )}
           {assetDropdownVisible && (
@@ -77,7 +77,7 @@ const WalletConnectButton: React.FC<{
                 <button
                   className="button"
                   key={index}
-                  onClick={() => handleAssetClick(asset)}
+                  onClick={() => handleAssetClick(assets[index])}
                 >
                   <p className="assetName">Select {asset.assetName}</p>
                 </button>
