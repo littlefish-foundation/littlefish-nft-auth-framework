@@ -19,6 +19,24 @@ export function decodeHexToAscii(processedArray: Asset[]): Asset[] {
 }
 
 /**
+ * A Helper function that gets the balance in lovelace from getBalance function result.
+  * @param {string} balance - The balance to convert.
+  * @returns {number} - The balance in lovelace.
+ */
+export function balanceDecoded(balance: string): number {
+  const bytes = new Uint8Array(
+    balance.match(/[\da-f]{2}/gi)?.map((h) => parseInt(h, 16)) || []
+  );
+  const decodedData = cbor.decode(bytes.buffer);
+  if (Array.isArray(decodedData) && typeof decodedData[0] === "number") {
+    const test = { balance: decodedData[0] };
+    return decodedData[0];
+  } else {
+    return 0;
+  }
+}
+
+/**
  * Helper function that converts a hexadecimal string to ASCII.
  * @param {string} hex - The hexadecimal string to convert.
  * @returns {string} - The ASCII string.

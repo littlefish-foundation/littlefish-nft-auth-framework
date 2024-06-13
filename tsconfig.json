@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "/dist",
+    "outDir": "./dist",
     "rootDirs": ["src/backend", "src/frontend"],
     "declaration": true, // Generate .d.ts files
     "declarationMap": true,

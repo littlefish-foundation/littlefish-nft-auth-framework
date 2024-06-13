@@ -1,4 +1,4 @@
-import { assetDecoder, processAssets } from "../utils/utils";
+import { assetDecoder, balanceDecoded, processAssets } from "../utils/utils";
 import { Asset, Wallet } from "../types/types";
 
 // Declare a global interface for the window object to include the Cardano object
@@ -56,35 +56,38 @@ export async function connectWallet(
   walletName: string,
   isClient: boolean,
   isConnected: boolean
-): Promise<[boolean, string, Asset[] | null, [string], number]> {
+): Promise<[boolean, string, Asset[] | null, [string], number, number]> {
   let walletAssets: Asset[] | null = null;
   let networkID: number = 0;
   let balance: number = 0;
   let address: [string] = [""];
   let utxoData: [string] = [""];
+  let balanceUtxo: string = "";
   if (isClient && window.cardano && window.cardano[walletName]) {
     try {
       await window.cardano[walletName].enable().then(async (api) => {
-        balance = await api.getBalance();
+        balanceUtxo = await api.getBalance();
         networkID = await api.getNetworkId();
         utxoData = await api.getUtxos();
         address = await api.getRewardAddresses();
       });
       const walletAssets = processAssets(assetDecoder(utxoData));
       isConnected = true;
-      return [isConnected, walletName, walletAssets, address, networkID];
+      const balance = balanceDecoded(balanceUtxo);
+      return [isConnected, walletName, walletAssets, address, networkID, balance];
     } catch (error) {
       console.error("Failed to enable the wallet or fetch UTXOs", error);
       isConnected = false;
       walletName = "null";
       let walletAssets: null = null;
-      return [isConnected, walletName, walletAssets, address, networkID];
+      balance = 5;
+      return [isConnected, walletName, walletAssets, address, networkID, balance];
     }
   } else {
     console.error("Wallet not found or cardano object not available");
   }
 
-  return [isConnected, walletName, walletAssets, address, networkID];
+  return [isConnected, walletName, walletAssets, address, networkID, balance];
 }
 
 /**

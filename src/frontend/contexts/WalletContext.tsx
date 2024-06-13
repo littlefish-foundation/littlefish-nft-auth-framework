@@ -53,7 +53,7 @@ export const WalletProvider: FC<WalletProviderProps> = ({
 
   // Define the functions to handle connecting the wallet
   const handleConnectWallet = async (walletName: string) => {
-    const [success, walletId, walletAssets, address, network] =
+    const [success, walletId, walletAssets, address, network, balance] =
       await connectWallet(walletName, isClient, isConnected);
     if (success && walletId && walletAssets) {
       setIsConnected(true);
