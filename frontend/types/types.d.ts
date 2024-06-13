@@ -1,7 +1,6 @@
 /**
  * @file This file contains all the types used in the frontend
  */
-
 /**
  * Interface for the asset object.
  * @interface Asset
@@ -29,11 +28,10 @@
  * ];
  */
 export interface Asset {
-  policyID: string;
-  assetName: string;
-  amount: number;
+    policyID: string;
+    assetName: string;
+    amount: number;
 }
-
 /**
  * Interface for the wallet context properties.
  * @interface WalletContextProps
@@ -47,7 +45,7 @@ export interface Asset {
  * @property {Wallet[]} wallets - Array of wallets.
  * @property {number} networkID - Network ID.
  * @property {[string]} addresses - Array of addresses.
- * @property {number} balance - The balance of the wallet.
+ *
  * @example
  * const walletContextProps: WalletContextProps = {
  *   isConnected: true,
@@ -74,19 +72,18 @@ export interface Asset {
  * };
  */
 export interface WalletContextProps {
-  isConnected: boolean;
-  assets: Asset[];
-  connectedWalletId: string | null;
-  connectWallet: (walletName: string) => Promise<void>;
-  disconnectWallet: () => void;
-  decodeHexToAscii: (processedArray: Asset[]) => Asset[];
-  isClient: boolean;
-  wallets: Wallet[];
-  networkID: number;
-  addresses: [string];
-  balance: number;
+    isConnected: boolean;
+    assets: Asset[];
+    connectedWalletId: string | null;
+    connectWallet: (walletName: string) => Promise<void>;
+    disconnectWallet: () => void;
+    decodeHexToAscii: (processedArray: Asset[]) => Asset[];
+    isClient: boolean;
+    wallets: Wallet[];
+    networkID: number;
+    addresses: [string];
+    balance: number;
 }
-
 /**
  * Interface for the wallet object.
  * @interface Wallet
@@ -110,6 +107,7 @@ export interface WalletContextProps {
  * ];
  */
 export interface Wallet {
-  name: string;
-  icon: string;
+    name: string;
+    icon: string;
 }
+//# sourceMappingURL=types.d.ts.map

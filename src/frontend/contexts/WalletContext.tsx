@@ -22,6 +22,7 @@ const defaultContext: WalletContextProps = {
   wallets: [],
   networkID: 0,
   addresses: [""],
+  balance: 0,
 };
 
 // Create a context for the wallet
@@ -48,6 +49,7 @@ export const WalletProvider: FC<WalletProviderProps> = ({
   const [isClient, setIsClient] = useState<boolean>(true);
   const [networkID, setNetworkID] = useState<number>(0);
   const [addresses, setAddresses] = useState<[string]>([""]);
+  const [balance, setBalance] = useState<number>(0);
 
   // Define the functions to handle connecting the wallet
   const handleConnectWallet = async (walletName: string) => {
@@ -59,6 +61,7 @@ export const WalletProvider: FC<WalletProviderProps> = ({
       setAssets(walletAssets);
       setNetworkID(network);
       setAddresses(address);
+      setBalance(balance);
     }
   };
 
@@ -69,6 +72,10 @@ export const WalletProvider: FC<WalletProviderProps> = ({
       setConnectedWalletId(null);
       setAssets([]);
     }
+  };
+
+  const handleWalletADAAmount = () => {
+    return 0;
   };
 
   // Fetch the installed wallets when the component mounts
@@ -105,6 +112,7 @@ export const WalletProvider: FC<WalletProviderProps> = ({
         wallets,
         addresses,
         networkID,
+        balance,
       }}
     >
       {children}

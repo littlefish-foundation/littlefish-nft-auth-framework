@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { useWallet } from '../contexts/WalletContext';
-import "./walletConnectPage.css"; // Import the new CSS file
+//import "./walletConnectPage.css"; // Import the new CSS file
 import { Wallet } from "../types/types";
 
 /**

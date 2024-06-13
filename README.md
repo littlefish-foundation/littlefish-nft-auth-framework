@@ -76,6 +76,7 @@ interface WalletContextProps {
   wallets: Wallet[];
   networkID: number;
   addresses: [string];
+  balance: number;
 };
 
 ```

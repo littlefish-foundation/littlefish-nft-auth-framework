@@ -20,10 +20,10 @@
     }
   },
   "scripts": {
-    "build:backend": "babel src/backend --out-dir dist/backend --extensions \".ts,.tsx\" --ignore \"**/*.d.ts\",\"**/*.test.ts\",\"**/*.test.tsx\",\"**/__tests__/*\" && tsc --project ./tsconfig.json",
-    "build:frontend": "babel src/frontend --out-dir dist/frontend --extensions \".ts,.tsx\" --ignore \"**/*.d.ts\",\"**/*.test.ts\",\"**/*.test.tsx\",\"**/__tests__/*\" && tsc --project ./tsconfig.json && npm run copy-css",
+    "build:backend": "babel src/backend --out-dir ./dist/backend --extensions \".ts,.tsx\" --ignore \"**/*.d.ts\",\"**/*.test.ts\",\"**/*.test.tsx\",\"**/__tests__/*\" && tsc --project ./tsconfig.json",
+    "build:frontend": "babel src/frontend --out-dir ./dist/frontend --extensions \".ts,.tsx\" --ignore \"**/*.d.ts\",\"**/*.test.ts\",\"**/*.test.tsx\",\"**/__tests__/*\" && tsc --project ./tsconfig.json && npm run copy-css",
     "build": "npm run build:backend && npm run build:frontend",
-    "copy-css": "copyfiles -u 2 src/frontend/**/*.css dist/frontend",
+    "copy-css": "copyfiles -u 2 src/frontend/**/*.css ./dist/frontend",
     "test": "npx jest",
     "prepublish": "npm run build"
   },
@@ -107,8 +107,6 @@
     "cbor-js": "^0.1.0",
     "crypto": "^1.0.1",
     "prisma": "^5.13.0",
-    "react": "^18",
-    "react-dom": "^18",
     "react-hook-form": "^7.51.3",
     "util": "^0.12.5"
   },
@@ -136,7 +134,9 @@
     "jest-fetch-mock": "^3.0.3",
     "npm": "^10.7.0",
     "ts-jest": "^29.1.4",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "react": "^18",
+    "react-dom": "^18"
   },
   "eslintConfig": {
     "extends": [

@@ -59,11 +59,13 @@ export async function connectWallet(
 ): Promise<[boolean, string, Asset[] | null, [string], number]> {
   let walletAssets: Asset[] | null = null;
   let networkID: number = 0;
+  let balance: number = 0;
   let address: [string] = [""];
   let utxoData: [string] = [""];
   if (isClient && window.cardano && window.cardano[walletName]) {
     try {
       await window.cardano[walletName].enable().then(async (api) => {
+        balance = await api.getBalance();
         networkID = await api.getNetworkId();
         utxoData = await api.getUtxos();
         address = await api.getRewardAddresses();
