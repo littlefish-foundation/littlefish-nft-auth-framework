@@ -19,17 +19,17 @@ const WalletConnectPage: React.FC = () => {
   } = useWallet();
 
   return (
-    <div className="container">
+    <div id="container">
       {!isConnected ? (
         // Display the wallet connection options if the wallet is not connected
         <>
-          <h1>Please Choose the Wallet you want to connect</h1>
+          <h1 id="h1">Please Choose the Wallet you want to connect</h1>
           {wallets.length === 0 && <h2>No wallets available</h2>}
           {wallets.length !== 0 && (
-            <div className="dropdown">
+            <div id="dropdown">
               {wallets.map((wallet, index) => (
                 <button
-                  className="button"
+                  id="button"
                   key={index}
                   onClick={() => connectWallet(wallet.name)}
                 >
@@ -42,10 +42,10 @@ const WalletConnectPage: React.FC = () => {
       ) : (
         // Display the connected wallet information if the wallet is connected and the network ID
         <div>
-          <div className="networkInfo">
+          <div id="networkInfo">
             Network ID: {networkID === 1 ? "Mainnet" : "Testnet"}
           </div>
-          <button className="button" onClick={() => disconnectWallet()}>
+          <button id="button" onClick={() => disconnectWallet()}>
             Disconnect {connectedWalletId}
           </button>
         </div>

@@ -60,26 +60,26 @@ const WalletConnectButton: React.FC<{
   };
 
   return (
-    <div className="container">
+    <div id="container">
       {isConnected ? (
         <>
-          <button className="button" onClick={() => disconnectWallet()}>
+          <button id="button" onClick={() => disconnectWallet()}>
             Disconnect {connectedWalletId}
           </button>
           {assets.length > 0 && (
-            <button className="button" onClick={() => handleAssetDropdownClick()}>
+            <button id="button" onClick={() => handleAssetDropdownClick()}>
               <p>You can authenticate with Asset</p>
             </button>
           )}
           {assetDropdownVisible && (
-            <div className="dropdown">
+            <div id="dropdown">
               {decodedAssets.map((asset, index) => (
                 <button
-                  className="button"
+                  id="button"
                   key={index}
                   onClick={() => handleAssetClick(assets[index])}
                 >
-                  <p className="assetName">Select {asset.assetName}</p>
+                  <p id="assetName">Select {asset.assetName}</p>
                 </button>
               ))}
             </div>
@@ -88,22 +88,22 @@ const WalletConnectButton: React.FC<{
       ) : (
         // Display the connect button and the dropdown menu if the wallet is not connected
         <div>
-          <button className="button" onClick={() => handleConnectClick()}>
+          <button id="button" onClick={() => handleConnectClick()}>
             Connect Wallet
           </button>
           {dropdownVisible && (
             // Display the dropdown menu with the available wallets if the dropdown is visible
-            <div className="dropdown">
+            <div id="dropdown">
               {wallets.map((wallet, index) => (
                 <button
-                  className="button"
+                  id="button"
                   key={index}
                   onClick={() => handleWalletClick(wallet)}
                 >
-                  <p className="walletName">
+                  <p id="walletName">
                     {wallet.name !== "typhoncip30" ? wallet.name : "typhon"}
                   </p>
-                  <img className="image" src={wallet.icon} alt="wallet icon" />
+                  <img id="image" src={wallet.icon} alt="wallet icon" />
                 </button>
               ))}
             </div>
