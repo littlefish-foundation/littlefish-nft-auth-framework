@@ -14,7 +14,7 @@ const WalletConnectPage: React.FC = () => {
     isConnected, // A boolean indicating if the wallet is connected
     connectWallet, // A function to connect to a wallet
     disconnectWallet, // A function to disconnect the wallet
-    connectedWalletId, // The ID of the connected wallet
+    connectedWallet, // The ID of the connected wallet
     networkID, // The network ID of the connected wallet
   } = useWallet();
 
@@ -31,7 +31,7 @@ const WalletConnectPage: React.FC = () => {
                 <button
                   id="button"
                   key={index}
-                  onClick={() => connectWallet(wallet.name)}
+                  onClick={() => connectWallet(wallet)}
                 >
                   Connect to {wallet.name}
                 </button>
@@ -46,7 +46,7 @@ const WalletConnectPage: React.FC = () => {
             Network ID: {networkID === 1 ? "Mainnet" : "Testnet"}
           </div>
           <button id="button" onClick={() => disconnectWallet()}>
-            Disconnect {connectedWalletId}
+            Disconnect {connectedWallet.name}
           </button>
         </div>
       )}

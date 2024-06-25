@@ -17,7 +17,7 @@ const WalletConnectButton: React.FC<{
     isConnected, // A boolean indicating if the wallet is connected
     connectWallet, // A function to connect to a wallet
     disconnectWallet, // A function to disconnect the wallet
-    connectedWalletId, // The ID of the connected wallet
+    connectedWallet, // The ID of the connected wallet
     assets, // The assets associated with the connected wallet
     decodeHexToAscii, // A function to decode hex strings to ASCII
   } = useWallet();
@@ -44,7 +44,7 @@ const WalletConnectButton: React.FC<{
 
   // Function to handle the wallet selection and connection
   const handleWalletClick = (wallet: Wallet) => {
-    connectWallet(wallet.name);
+    connectWallet(wallet);
     setWalletName(wallet.name);
     setWalletIcon(wallet.icon);
     setDropdownVisible(false); // Close the dropdown after selecting a wallet
@@ -64,7 +64,7 @@ const WalletConnectButton: React.FC<{
       {isConnected ? (
         <>
           <button id="button" onClick={() => disconnectWallet()}>
-            Disconnect {connectedWalletId}
+            Disconnect {connectedWallet.name}
           </button>
           {assets.length > 0 && (
             <button id="button" onClick={() => handleAssetDropdownClick()}>

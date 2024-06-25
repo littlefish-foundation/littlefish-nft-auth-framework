@@ -39,7 +39,7 @@ export interface Asset {
  * @interface WalletContextProps
  * @property {boolean} isConnected - Indicates if the wallet is connected.
  * @property {Asset[]} assets - Array of assets.
- * @property {string | null} connectedWalletId - ID of the connected wallet.
+ * @property {Wallet | null} connectedWallet - Object of the connected wallet.
  * @property {(walletName: string) => Promise<void>} connectWallet - Function to connect to a wallet.
  * @property {() => void} disconnectWallet - Function to disconnect the wallet.
  * @property {(processedArray: Asset[]) => Asset[]} decodeHexToAscii - Function to decode hex to ASCII.
