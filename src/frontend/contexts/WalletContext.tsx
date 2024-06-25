@@ -14,7 +14,7 @@ import { decodeHexToAscii } from "../utils/utils";
 const defaultContext: WalletContextProps = {
   isConnected: false,
   assets: [],
-  connectedWalletId: null,
+  connectedWallet: null,
   connectWallet: async () => {},
   disconnectWallet: () => {},
   decodeHexToAscii: (processedArray) => processedArray,
@@ -42,7 +42,7 @@ export const WalletProvider: FC<WalletProviderProps> = ({
   // Define the state variables for the wallet context
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [assets, setAssets] = useState<Asset[]>([]);
-  const [connectedWalletId, setConnectedWalletId] = useState<string | null>(
+  const [connectedWallet, setConnectedWallet] = useState<Wallet | null>(
     null
   );
   const [wallets, setWallets] = useState<Wallet[]>([]);
@@ -52,12 +52,12 @@ export const WalletProvider: FC<WalletProviderProps> = ({
   const [balance, setBalance] = useState<number>(0);
 
   // Define the functions to handle connecting the wallet
-  const handleConnectWallet = async (walletName: string) => {
+  const handleConnectWallet = async (wallet: Wallet) => {
     const [success, walletId, walletAssets, address, network, balance] =
-      await connectWallet(walletName, isClient, isConnected);
+      await connectWallet(wallet.name, isClient, isConnected);
     if (success && walletId && walletAssets) {
       setIsConnected(true);
-      setConnectedWalletId(walletId);
+      setConnectedWallet(wallet);
       setAssets(walletAssets);
       setNetworkID(network);
       setAddresses(address);
@@ -69,13 +69,9 @@ export const WalletProvider: FC<WalletProviderProps> = ({
   const handleDisconnectWallet = () => {
     setIsConnected(disconnectWallet(isClient, isConnected));
     if (!isConnected) {
-      setConnectedWalletId(null);
+      setConnectedWallet(null);
       setAssets([]);
     }
-  };
-
-  const handleWalletADAAmount = () => {
-    return 0;
   };
 
   // Fetch the installed wallets when the component mounts
@@ -104,7 +100,7 @@ export const WalletProvider: FC<WalletProviderProps> = ({
       value={{
         isConnected,
         assets,
-        connectedWalletId,
+        connectedWallet,
         connectWallet: handleConnectWallet,
         disconnectWallet: handleDisconnectWallet,
         decodeHexToAscii: handleDecodeHexToAscii,

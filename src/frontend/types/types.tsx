@@ -76,8 +76,8 @@ export interface Asset {
 export interface WalletContextProps {
   isConnected: boolean;
   assets: Asset[];
-  connectedWalletId: string | null;
-  connectWallet: (walletName: string) => Promise<void>;
+  connectedWallet: Wallet | null;
+  connectWallet: (wallet: Wallet) => Promise<void>;
   disconnectWallet: () => void;
   decodeHexToAscii: (processedArray: Asset[]) => Asset[];
   isClient: boolean;
