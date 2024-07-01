@@ -15,8 +15,8 @@ const defaultContext: WalletContextProps = {
   isConnected: false,
   assets: [],
   connectedWallet: null,
-  connectWallet: async () => {},
-  disconnectWallet: () => {},
+  connectWallet: async () => { },
+  disconnectWallet: () => { },
   decodeHexToAscii: (processedArray) => processedArray,
   isClient: true,
   wallets: [],
@@ -62,6 +62,14 @@ export const WalletProvider: FC<WalletProviderProps> = ({
       setNetworkID(network);
       setAddresses(address);
       setBalance(balance);
+
+      localStorage.setItem("walletConnected", JSON.stringify({
+        wallet,
+        walletAssets,
+        networkID,
+        addresses,
+        balance
+      }));
     }
   };
 
@@ -71,6 +79,7 @@ export const WalletProvider: FC<WalletProviderProps> = ({
     if (!isConnected) {
       setConnectedWallet(null);
       setAssets([]);
+      localStorage.removeItem("walletConnected");
     }
   };
 
@@ -88,6 +97,16 @@ export const WalletProvider: FC<WalletProviderProps> = ({
       }
     };
     fetchInstalledWallets();
+    const savedWalletConnection = localStorage.getItem("walletConnected");
+    if (savedWalletConnection) {
+      const { wallet, walletAssets, networkID, addresses, balance } = JSON.parse(savedWalletConnection);
+      setIsConnected(true);
+      setConnectedWallet(wallet);
+      setAssets(walletAssets);
+      setNetworkID(networkID);
+      setAddresses(addresses);
+      setBalance(balance);
+    }
   }, [isClient]);
 
   // Define the function to decode hexadecimal strings to ASCII

@@ -269,3 +269,29 @@ export function findMatchingAsset(
       asset.assetName === userasset.assetName
   );
 }
+
+/**
+ * Decodes assets names from hex string to UTF-8.
+ * @param {Asset[]} processedArray - The array of assets to decode.
+ * @returns {Asset[]} - The array of assets with decoded named assets.
+ */
+export function decodeHexToUtf8(processedArray: Asset[]): Asset[] {
+  return processedArray.map((item) => {
+    const { policyID, assetName, amount } = item;
+    const decodedAssetName = hexToUtf8(assetName); // Decode the hex asset name to UTF-8
+    return {
+      policyID: policyID,
+      assetName: decodedAssetName,
+      amount: amount,
+    };
+  });
+}
+
+// Helper function to convert hex to UTF-8
+function hexToUtf8(hex: string): string {
+  // Convert hex string to a byte array
+  const bytes = new Uint8Array(hex.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
+  // Decode the byte array to a UTF-8 string
+  const decoder = new TextDecoder('utf-8');
+  return decoder.decode(bytes);
+  }

@@ -9,6 +9,7 @@ export {
   verifyAssetOwnership,
   verifyAssetPolicy,
   verifyWalletAssets,
-  
+  convertHexToBech32,
+  decodeHexToUtf8,
 } from "./utils/utils";
 export { setConfig } from "./config";
