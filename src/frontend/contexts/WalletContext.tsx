@@ -15,8 +15,8 @@ const defaultContext: WalletContextProps = {
   isConnected: false,
   assets: [],
   connectedWallet: null,
-  connectWallet: async () => { },
-  disconnectWallet: () => { },
+  connectWallet: async () => {},
+  disconnectWallet: () => {},
   decodeHexToAscii: (processedArray) => processedArray,
   isClient: true,
   wallets: [],
@@ -42,9 +42,7 @@ export const WalletProvider: FC<WalletProviderProps> = ({
   // Define the state variables for the wallet context
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [assets, setAssets] = useState<Asset[]>([]);
-  const [connectedWallet, setConnectedWallet] = useState<Wallet | null>(
-    null
-  );
+  const [connectedWallet, setConnectedWallet] = useState<Wallet | null>(null);
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [isClient, setIsClient] = useState<boolean>(true);
   const [networkID, setNetworkID] = useState<number>(0);
@@ -63,24 +61,29 @@ export const WalletProvider: FC<WalletProviderProps> = ({
       setAddresses(address);
       setBalance(balance);
 
-      localStorage.setItem("walletConnected", JSON.stringify({
-        wallet,
-        walletAssets,
-        networkID,
-        addresses,
-        balance
-      }));
+      localStorage.setItem(
+        "walletConnected",
+        JSON.stringify({
+          wallet,
+          walletAssets,
+          network,
+          address,
+          balance,
+        })
+      );
     }
   };
 
   // Define the function to handle disconnecting the wallet
   const handleDisconnectWallet = () => {
-    setIsConnected(disconnectWallet(isClient, isConnected));
-    if (!isConnected) {
-      setConnectedWallet(null);
-      setAssets([]);
-      localStorage.removeItem("walletConnected");
-    }
+    disconnectWallet(isClient, isConnected);
+    setIsConnected(false);
+    setConnectedWallet(null);
+    setAssets([]);
+    setNetworkID(0);
+    setAddresses([""]);
+    setBalance(0);
+    localStorage.removeItem("walletConnected");
   };
 
   // Fetch the installed wallets when the component mounts
@@ -99,12 +102,15 @@ export const WalletProvider: FC<WalletProviderProps> = ({
     fetchInstalledWallets();
     const savedWalletConnection = localStorage.getItem("walletConnected");
     if (savedWalletConnection) {
-      const { wallet, walletAssets, networkID, addresses, balance } = JSON.parse(savedWalletConnection);
+      const { wallet, walletAssets, network, address, balance } = JSON.parse(
+        savedWalletConnection
+      );
+      async () => await window.cardano[wallet.name].enable();
       setIsConnected(true);
       setConnectedWallet(wallet);
       setAssets(walletAssets);
-      setNetworkID(networkID);
-      setAddresses(addresses);
+      setNetworkID(network);
+      setAddresses(address);
       setBalance(balance);
     }
   }, [isClient]);
