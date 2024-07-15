@@ -9,6 +9,7 @@ import React, {
 import { getWallets, connectWallet, disconnectWallet } from "../api/cardanoAPI";
 import { Asset, WalletContextProps, Wallet } from "../types/types";
 import { decodeHexToAscii } from "../utils/utils";
+import { safeStorage } from "../utils/safeStorage";
 
 // Define the default context to initialize the context
 const defaultContext: WalletContextProps = {
@@ -61,7 +62,7 @@ export const WalletProvider: FC<WalletProviderProps> = ({
       setAddresses(address);
       setBalance(balance);
 
-      localStorage.setItem(
+      safeStorage.setItem(
         "walletConnected",
         JSON.stringify({
           wallet,
@@ -83,7 +84,7 @@ export const WalletProvider: FC<WalletProviderProps> = ({
     setNetworkID(0);
     setAddresses([""]);
     setBalance(0);
-    localStorage.removeItem("walletConnected");
+    safeStorage.removeItem("walletConnected");
   };
 
   // Fetch the installed wallets when the component mounts
@@ -100,7 +101,7 @@ export const WalletProvider: FC<WalletProviderProps> = ({
       }
     };
     fetchInstalledWallets();
-    const savedWalletConnection = localStorage.getItem("walletConnected");
+    const savedWalletConnection = safeStorage.getItem("walletConnected");
     if (savedWalletConnection) {
       const { wallet, walletAssets, network, address, balance } = JSON.parse(
         savedWalletConnection
