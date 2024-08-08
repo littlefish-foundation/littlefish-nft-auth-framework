@@ -42,6 +42,66 @@ export async function fetchAssets(
 }
 
 /**
+ * Fetches metadata associated with an asset from the Blockfrost API.
+ * @param {Asset} rawAsset - The asset to fetch metadata for.
+ * @param {string} networkId - The network identifier (mainnet or testnet).
+ * @param {string} apiKey - The Blockfrost API key.
+ * @returns {Promise<[any, boolean]>} - A promise that resolves to a tuple containing the metadata and a boolean indicating if the metadata is SSO.
+ */
+export async function metadataReader(rawAsset: Asset, networkId: string, apiKey: string,): Promise<[any, boolean]> {
+  const asset = rawAsset.policyID+rawAsset.assetName;
+  const url = `https://cardano-${networkId}.blockfrost.io/api/v0/assets/${asset}`
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      project_id: apiKey,
+    },
+    });
+
+  if (!response.ok) {
+    throw new Error(`Failed to asset details: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+
+  if (!data.metadata) {
+    throw new Error("No metadata found");
+  }
+
+  try {
+    data.onchain_metadata.files[0].src.replace('ipfs://', 'https://ipfs.io/ipfs/');
+  } catch (error) {
+    console.error("Failed to fetch metadata:", error);
+  }
+
+  if (!data.metadata.sso) {
+    return [data.onchain_metadata, false];
+  }
+
+  const sso = data.metadata.sso;
+  if (sso.isMaxUsageEnabled == 1){
+    sso.isMaxUsageEnabled = true
+  } else {
+    sso.isMaxUsageEnabled = false
+  }
+
+  if (sso.isTransferable == 1){
+    sso.isTransferable = true
+  } else {
+    sso.isTransferable = false
+  }
+
+  if (sso.isInactivityEnabled == 1){
+    sso.isInactivityEnabled = true
+  } else {
+    sso.isInactivityEnabled = false
+  }
+  return [sso, true];
+}
+
+/**
  * Checks if a string is non-empty.
  * @param {string} str - The string to check.
  * @returns {boolean} - True if the string is non-empty, false otherwise.
