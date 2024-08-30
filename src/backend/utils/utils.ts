@@ -48,7 +48,8 @@ export async function fetchAssets(
  * @param {string} apiKey - The Blockfrost API key.
  * @returns {Promise<[any, boolean]>} - A promise that resolves to a tuple containing the metadata and a boolean indicating if the metadata is SSO.
  */
-export async function metadataReader(rawAsset: Asset, networkId: string, apiKey: string,): Promise<[any, boolean]> {
+export async function metadataReader(rawAsset: Asset): Promise<[any, boolean]> {
+  const { apiKey, networkId } = getConfig();
   const asset = rawAsset.policyID+rawAsset.assetName;
   const url = `https://cardano-${networkId}.blockfrost.io/api/v0/assets/${asset}`
 
@@ -66,7 +67,7 @@ export async function metadataReader(rawAsset: Asset, networkId: string, apiKey:
 
   const data = await response.json();
 
-  if (!data.metadata) {
+  if (!data.onchain_metadata) {
     throw new Error("No metadata found");
   }
 
@@ -76,11 +77,11 @@ export async function metadataReader(rawAsset: Asset, networkId: string, apiKey:
     console.error("Failed to fetch metadata:", error);
   }
 
-  if (!data.metadata.sso) {
+  if (!data.onchain_metadata.sso) {
     return [data.onchain_metadata, false];
   }
 
-  const sso = data.metadata.sso;
+  const sso = data.onchain_metadata.sso;
   if (sso.isMaxUsageEnabled == 1){
     sso.isMaxUsageEnabled = true
   } else {

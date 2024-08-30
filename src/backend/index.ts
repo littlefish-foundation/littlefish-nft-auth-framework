@@ -1,5 +1,6 @@
 export { signupUser } from "./signupUser";
 export { loginUser } from "./loginUser";
+export { Sso } from "./sso";
 export {
   generateNonce,
   hashPassword,

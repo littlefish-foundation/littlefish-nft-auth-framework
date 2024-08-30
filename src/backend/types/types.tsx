@@ -112,3 +112,43 @@ export interface LoginResult {
     success: boolean;
     error?: string;
 }
+
+/**
+  * Interface for the SSO Signin options.
+  * @interface SSOOptions
+  * @property {string} stakeAddress - The wallet address of the user.
+  * @property {number} walletNetwork - The network of the wallet.
+  * @property {string} signature - The signature of the user.
+  * @property {string} key - The key of the user.
+  * @property {string} nonce - The nonce of the user.
+  * @property {Asset} asset - The asset to be verified.
+  * @property {string} issuerOption - The issuer of the asset.
+  * @property {string} platformUniqueIdentifier - The unique identifier of the platform.
+  * @property {number} usageCount - The usage count of the asset.
+  * @property {string} lastUsage - The last usage of the asset.
+ */
+export interface SsoOptions {
+    stakeAddress: string;
+    walletNetwork: number;
+    signature: string;
+    key: string;
+    nonce: string;
+    asset: Asset;
+    issuerOption: string;
+    platformUniqueIdentifier: string;
+    usageCount?: number;
+    lastUsage?: string;
+}
+
+/**
+  * Interface for the SSO Result.
+  * @interface SsoResult
+  * @property {boolean} success - Indicates if the SSO was successful.
+  * @property {string[]} roles - The roles of the user.
+  * @property {string} error - The error message if SSO failed.
+  */
+export interface SsoResult {
+    success: boolean;
+    roles?: string[];
+    error?: string;
+}

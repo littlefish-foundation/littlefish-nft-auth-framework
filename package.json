@@ -24,7 +24,8 @@
     "build:frontend": "babel src/frontend --out-dir dist/frontend --extensions \".ts,.tsx\" --ignore \"**/*.d.ts\",\"**/*.test.ts\",\"**/*.test.tsx\",\"**/__tests__/*\" && tsc --project ./tsconfig.json && npm run copy-css && npm run copy-utils",
     "build": "npm run build:backend && npm run build:frontend",
     "copy-css": "copyfiles -u 2 src/frontend/**/*.css dist/frontend",
-    "copy-utils": "copyfiles -u 2 src/frontend/utils/*.ts dist/frontend/utils"
+    "copy-utils": "copyfiles -u 2 src/frontend/utils/*.ts dist/frontend/utils",
+    "test": "jest"
   },
   "jest": {
     "projects": [
