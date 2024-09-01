@@ -137,7 +137,7 @@ export interface SsoOptions {
     issuerOption: string;
     platformUniqueIdentifier: string;
     usageCount?: number;
-    lastUsage?: string;
+    lastUsage?: Date;
 }
 
 /**

@@ -81,25 +81,25 @@ export async function metadataReader(rawAsset: Asset): Promise<[any, boolean]> {
     return [data.onchain_metadata, false];
   }
 
-  const sso = data.onchain_metadata.sso;
-  if (sso.isMaxUsageEnabled == 1){
-    sso.isMaxUsageEnabled = true
+  const metadata = data.onchain_metadata;
+  if (metadata.sso.isMaxUsageEnabled == 1){
+    metadata.sso.isMaxUsageEnabled = true
   } else {
-    sso.isMaxUsageEnabled = false
+    metadata.sso.isMaxUsageEnabled = false
   }
 
-  if (sso.isTransferable == 1){
-    sso.isTransferable = true
+  if (metadata.sso.isTransferable == 1){
+    metadata.sso.isTransferable = true
   } else {
-    sso.isTransferable = false
+    metadata.sso.isTransferable = false
   }
 
-  if (sso.isInactivityEnabled == 1){
-    sso.isInactivityEnabled = true
+  if (metadata.sso.isInactivityEnabled == 1){
+    metadata.sso.isInactivityEnabled = true
   } else {
-    sso.isInactivityEnabled = false
+    metadata.sso.isInactivityEnabled = false
   }
-  return [sso, true];
+  return [metadata, true];
 }
 
 /**

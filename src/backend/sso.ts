@@ -1,5 +1,5 @@
 import { SsoOptions, SsoResult } from "./types/types";
-import { metadataReader, verifyWalletAddress } from "./utils/utils";
+import { metadataReader, verifyWalletAddress, convertHexToBech32 } from "./utils/utils";
 /**
  * Authentication function to validate users based on cardano asset and its sso metadata.
  * Assumes that user data fetching is handled outside this function.
@@ -20,6 +20,8 @@ export async function Sso(options: SsoOptions): Promise<SsoResult> {
     usageCount,
     lastUsage,
   } = options;
+
+  const bech32Address = convertHexToBech32(stakeAddress, walletNetwork);
 
   // Verify wallet address ownership
   const isValidSignature = verifyWalletAddress(
@@ -67,11 +69,12 @@ export async function Sso(options: SsoOptions): Promise<SsoResult> {
       return { success: false, error: "Issuer does not match" };
     }
     // Check if the unique identifier matches the platform unique identifier
+    
     if (uniqueIdentifier != platformUniqueIdentifier) {
       return { success: false, error: "Unique identifier does not match" };
     }
     // Check if the wallet is tied to the asset if it is not transferable
-    if (!isTransferable && tiedWallet !== stakeAddress) {
+    if (!isTransferable && tiedWallet !== bech32Address) {
       return { success: false, error: "Invalid wallet for the asset" };
     }
     // Check if the asset has reached the maximum usage count if the max usage is enabled
