@@ -12,5 +12,6 @@ export {
   verifyWalletAssets,
   convertHexToBech32,
   decodeHexToUtf8,
+  metadataReader
 } from "./utils/utils";
 export { setConfig } from "./config";
