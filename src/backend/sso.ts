@@ -42,7 +42,7 @@ export async function Sso(options: SsoOptions): Promise<SsoResult> {
   }
 
   // Check if the sso version is supported
-  if (metadata.sso.version == "0.1.0") {
+  if (metadata.version == "0.1.0") {
     const {
       uniqueIdentifier,
       issuer,
@@ -55,7 +55,7 @@ export async function Sso(options: SsoOptions): Promise<SsoResult> {
       isInactivityEnabled,
       inactivityPeriod,
       role,
-    } = metadata.sso;
+    } = metadata;
     // Check if the asset is expired
     const currentTime = new Date().getTime();
     const expirationTime = new Date(expirationDate).getTime();
