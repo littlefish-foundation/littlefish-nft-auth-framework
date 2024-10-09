@@ -135,7 +135,7 @@ export interface SsoOptions {
     nonce: string;
     asset: Asset;
     issuerOption: string;
-    platformUniqueIdentifier: string;
+    platformUniqueIdentifiers: string[];
     usageCount?: number;
     lastUsage?: string;
 }

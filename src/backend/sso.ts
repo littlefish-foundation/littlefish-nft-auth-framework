@@ -1,5 +1,6 @@
 import { SsoOptions, SsoResult } from "./types/types";
 import { metadataReader, verifyWalletAddress, convertHexToBech32 } from "./utils/utils";
+import { differenceInDays, differenceInMonths, differenceInYears } from 'date-fns';
 /**
  * Authentication function to validate users based on cardano asset and its sso metadata.
  * Assumes that user data fetching is handled outside this function.
@@ -16,10 +17,28 @@ export async function Sso(options: SsoOptions): Promise<SsoResult> {
     nonce,
     asset,
     issuerOption,
-    platformUniqueIdentifier,
+    platformUniqueIdentifiers,
     usageCount,
     lastUsage,
   } = options;
+
+  const checkInactivityPeriod = (lastUsed: string, inactivityPeriod: string): boolean => {
+    const now = new Date();
+    const lastUsedDate = new Date(lastUsed);
+    const [value, unit] = inactivityPeriod.match(/(\d+)([dmy])/)?.slice(1) ?? ['0', 'd'];
+    const numericValue = parseInt(value, 10);
+
+    switch (unit) {
+        case 'd':
+            return differenceInDays(now, lastUsedDate) <= numericValue;
+        case 'm':
+            return differenceInMonths(now, lastUsedDate) <= numericValue;
+        case 'y':
+            return differenceInYears(now, lastUsedDate) <= numericValue;
+        default:
+            return false;
+    }
+};
 
   // Verify wallet address ownership
   const isValidSignature = verifyWalletAddress(
@@ -67,7 +86,7 @@ export async function Sso(options: SsoOptions): Promise<SsoResult> {
       return { success: false, error: "Issuer does not match" };
     }
     // Check if the unique identifier matches the platform unique identifier
-    if (uniqueIdentifier != platformUniqueIdentifier) {
+    if (!platformUniqueIdentifiers.includes(uniqueIdentifier)) {
       return { success: false, error: "Unique identifier does not match" };
     }
     // Check if the wallet is tied to the asset if it is not transferable
@@ -80,8 +99,7 @@ export async function Sso(options: SsoOptions): Promise<SsoResult> {
       }
     // if inactivity is enabled, check if the inactivity period has passed by checking the current time
     if (isInactivityEnabled && inactivityPeriod) {
-      const lastUsageTime = new Date(lastUsage).getTime();
-      if (currentTime - lastUsageTime > inactivityPeriod) {
+      if (!checkInactivityPeriod(lastUsage, inactivityPeriod)) {
         return { success: false, error: "Inactivity period exceeded" };
       }
     }
