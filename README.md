@@ -114,6 +114,7 @@ interface WalletContextProps {
   - **Description**: uses the enabled browser wallet to sign a message to verify the ownership of the current connected wallet.
  
 ## SSO Metadata
+This is the metadata standard for the NFT Authentication Framework. This metadata is designed to be used in various scenarios. The metadata is designed to be used in the 721 standard of Cardano. The assets with this metadata will need to be provided by the platform and distributed to the users for authentication on their platforms. Usage of Issuer and uniqueIdentifier allows the issuers to limit which of their applications can use the asset for authentication.
 ```json
 {
     "721": {
