@@ -112,7 +112,45 @@ interface WalletContextProps {
 - **`signMessage(walletName: string, isConnected: boolean, message: string, address: string)`**
   - **Returns**: `Promise<[string, string] | void>`
   - **Description**: uses the enabled browser wallet to sign a message to verify the ownership of the current connected wallet.
-
+ 
+## SSO Metadata
+```json
+{
+    "721": {
+      "policyID": {
+        "LittleFishAuthNFT010": {
+          "name": "Asset Name",
+          "image": "ipfs image link",
+          "mediaType": "image/png",
+          "description": "Authentication token for the LittleFish platform - User 010",
+          "files": [
+            {
+              "name": "image name",
+              "mediaType": "image/png",
+              "src": "ipfs image link"
+            }
+          ],
+          "sso": {
+            "version": "0.1.0", // The current version of the SSO Metadata.
+            "uniqueIdentifier": "LF-AUTH-010-2024", // Unique identifier is set by the platform that provides this asset.
+            "issuer": "littlefishFoundation",
+            "issuanceDate": "2024-10-07T10:00:00Z",
+            "expirationDate": "2025-10-07T10:00:00Z",
+            "isTransferable": 0, // 0 for non-transferable, 1 for transferable asset
+            "tiedWallet": "stake_test1uzjearxju092qyrc9v5rz6ejmz4yfyhj3vtc32mcvxs52as8zgjua" // if the wallet is non-transferable, tied wallet address,
+            "isMaxUsageEnabled": 1, // if the maximum usage is enabled, 0 for no, 1 for yes
+            "maxUsage": 10, // maximum usage limit
+            "isInactivityEnabled": 1, // Inactivity period checker, 0 for no, 1 for yes
+            "inactivityPeriod": "30d", // inactivity period, "d" for days, "m" for months, "y" for years
+            "role": [
+              "admin"
+            ] // roles array, this is custom, the provided can assign their custom roles.
+          }
+        }
+      }
+    }
+  }
+```
 ## Server Types, Returned Values, and Function Descriptions
 
 ### Types
@@ -142,6 +180,19 @@ interface LoginOptions {
     authPolicy?: string;
 }
 
+interface SsoOptions {
+    stakeAddress: string;
+    walletNetwork: number;
+    signature: string;
+    key: string;
+    nonce: string;
+    asset: Asset;
+    issuerOption: string;
+    platformUniqueIdentifiers: string[];
+    usageCount?: number;
+    lastUsage?: string;
+}
+
 interface User {
     email?: string;
     password?: string;
@@ -165,6 +216,12 @@ interface LoginResult {
     success: boolean;
     error?: string;
 }
+
+interface SsoResult {
+    success: boolean;
+    roles?: string[];
+    error?: string;
+}
 ````
 ### Authentication Functions
 
@@ -175,6 +232,9 @@ interface LoginResult {
 - **`loginUser(user: User, options: signupOptions)`**
     - **Returns:** LoginResult
     - **Description**: This function can validate a user with either email and password or a Cardano wallet. It also verifies the ownership of the cardano wallet by verifying the signed data. If provided, this function makes Blockfrost API call to verify the asset is actually in the the provided wallet.
+- **`sso(options: SsoOptions)`**
+    - **Returns**: SsoResult
+    - **Description**: Authentication function to validate users based on cardano asset and its sso metadata. The asset ownership verification and metadata fetching relies on Blockfrost API.
 
 ### Utility Functions
 
@@ -219,6 +279,9 @@ setConfig(
 - **`verifyWalletAssets(assets: Asset[], stakeAddress: string, walletNetwork: number)`**
     - **Returns**: Promise<boolean>
     - **Description**: Verifies the assets associated with a wallet address.
+- **`metadataReader(rawAsset: Asset)`**
+    - **Returns**: Promise<[any, boolean]>
+    - **Description**: Fetches the metadata of the provided asset and returns its metadata and checks if the metadata has a designated sso and returns true if it does.
 
 
 ## Example Usage
@@ -360,7 +423,6 @@ const body = await request.json();
         nonce,
         asset
     } = body;
-
 ````
 
 And a user object fetched from the used database:
@@ -379,6 +441,33 @@ const result = loginUser(user, body);
 ```
 
 loginUser will return success and error if failed.
+
+#### SSO
+A body is created like this and it is sent to the sso function. 
+```jsx
+const body = await request.json();
+    const {
+    	stakeAddress,
+    	walletNetwork,
+    	signature,
+    	key,
+    	nonce,
+    	asset,
+    	issuerOption,
+    	platformUniqueIdentifiers,
+    	usageCount,
+    	lastUsage
+    } = body;
+const result = await sso(body);
+```
+The sso function returns an object like this:
+```jsx
+interface SsoResult {
+    success: boolean;
+    roles?: string[];
+    error?: string;
+}
+```
 
 #### Utility Functions
 
