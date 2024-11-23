@@ -147,8 +147,16 @@ export interface SsoOptions {
   * @property {string[]} roles - The roles of the user.
   * @property {string} error - The error message if SSO failed.
   */
+export interface PerformanceMetrics {
+  totalDuration: number;
+  signatureVerification: number;
+  metadataReading: number;
+  validationChecks: number;
+}
+
 export interface SsoResult {
-    success: boolean;
-    roles?: string[];
-    error?: string;
+  success: boolean;
+  error?: string;
+  roles?: string[];
+  metrics?: PerformanceMetrics;
 }

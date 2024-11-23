@@ -1,6 +1,17 @@
 import { SsoOptions, SsoResult } from "./types/types";
-import { metadataReader, verifyWalletAddress, convertHexToBech32 } from "./utils/utils";
+import { metadataReader, verifyWalletAddress, convertHexToBech32, verifyAssetOwnership } from "./utils/utils";
 import { differenceInDays, differenceInMonths, differenceInYears } from 'date-fns';
+import { performance } from 'perf_hooks';
+
+// Update the metrics interface
+interface PerformanceMetrics {
+  totalDuration: number;
+  signatureVerification: number;
+  metadataReading: number;
+  validationChecks: number;
+  assetOwnershipVerification: number;
+}
+
 /**
  * Authentication function to validate users based on cardano asset and its sso metadata.
  * Assumes that user data fetching is handled outside this function.
@@ -8,7 +19,14 @@ import { differenceInDays, differenceInMonths, differenceInYears } from 'date-fn
  * @return {SsoResult} The result of the authentication.
  */
 
-export async function Sso(options: SsoOptions): Promise<SsoResult> {
+export async function Sso(
+  options: SsoOptions,
+  enableMetrics: boolean = false
+): Promise<SsoResult & { metrics?: PerformanceMetrics }> {
+  const startTime = performance.now();
+  let signatureStart, signatureEnd, metadataStart, metadataEnd, validationStart, validationEnd;
+  let assetVerificationStart, assetVerificationEnd;
+
   const {
     stakeAddress,
     walletNetwork,
@@ -41,6 +59,7 @@ export async function Sso(options: SsoOptions): Promise<SsoResult> {
 };
 
   // Verify wallet address ownership
+  signatureStart = performance.now();
   const isValidSignature = verifyWalletAddress(
     signature,
     key,
@@ -48,19 +67,32 @@ export async function Sso(options: SsoOptions): Promise<SsoResult> {
     stakeAddress,
     walletNetwork
   );
+  signatureEnd = performance.now();
 
   // If the signature is invalid, return an error
   if (!isValidSignature) {
     return { success: false, error: "Invalid wallet credentials" };
   }
 
+  // Add asset ownership verification with performance metrics
+  assetVerificationStart = performance.now();
+  const verified = await verifyAssetOwnership(stakeAddress, asset, walletNetwork);
+  assetVerificationEnd = performance.now();
+
+  if (!verified) {
+    return { success: false, error: "Asset cannot be verified on-chain" };
+  }
+
   // Read the metadata and sso from the asset and check if the sso is available
+  metadataStart = performance.now();
   const [metadata, sso] = await metadataReader(asset);
+  metadataEnd = performance.now();
   if (!sso) {
     return { success: false, error: "No SSO available for the asset" };
   }
 
   // Check if the sso version is supported
+  validationStart = performance.now();
   if (metadata.version == "0.1.0") {
     const {
       uniqueIdentifier,
@@ -104,7 +136,40 @@ export async function Sso(options: SsoOptions): Promise<SsoResult> {
       }
     }
     // If all checks pass, return the roles if they exist
+    validationEnd = performance.now();
+    const endTime = performance.now();
+
+    if (enableMetrics) {
+      return {
+        success: true,
+        roles: role,
+        metrics: {
+          totalDuration: endTime - startTime,
+          signatureVerification: signatureEnd - signatureStart,
+          metadataReading: metadataEnd - metadataStart,
+          validationChecks: validationEnd - validationStart,
+          assetOwnershipVerification: assetVerificationEnd - assetVerificationStart
+        }
+      };
+    }
     return { success: true, roles: role };
+  }
+
+  validationEnd = performance.now();
+  const endTime = performance.now();
+
+  if (enableMetrics) {
+    return {
+      success: false,
+      error: "Unsupported SSO version",
+      metrics: {
+        totalDuration: endTime - startTime,
+        signatureVerification: signatureEnd - signatureStart,
+        metadataReading: metadataEnd - metadataStart,
+        validationChecks: validationEnd - validationStart,
+        assetOwnershipVerification: assetVerificationEnd - assetVerificationStart
+      }
+    };
   }
   return { success: false, error: "Unsupported SSO version" };
 }

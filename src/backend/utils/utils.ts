@@ -1,4 +1,4 @@
-import verifySignature from "@cardano-foundation/cardano-verify-datasignature";
+import verifySignature from "@cardano-foundation/cardano-verify-datasignature";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
 import { bech32 } from "bech32";
@@ -179,6 +179,7 @@ export function verifyWalletAddress(
     const address = convertHexToBech32(hex, walletNetwork);
 
     return verifySignature(signature, key, message, address);
+    //return true;
   } catch (error) {
     console.error("Failed to verify wallet address:", error);
     return false;
