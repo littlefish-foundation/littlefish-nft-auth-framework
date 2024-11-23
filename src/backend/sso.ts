@@ -83,13 +83,31 @@ export async function Sso(
     return { success: false, error: "Asset cannot be verified on-chain" };
   }
 
-  // Read the metadata and sso from the asset and check if the sso is available
+  // Read the metadata and sso from the asset
   metadataStart = performance.now();
-  const [metadata, sso] = await metadataReader(asset);
-  metadataEnd = performance.now();
-  if (!sso) {
-    return { success: false, error: "No SSO available for the asset" };
+  let metadata, sso;
+  try {
+    [metadata, sso] = await metadataReader(asset);
+  } catch (error) {
+    metadataEnd = performance.now();
+    const endTime = performance.now();
+    
+    if (enableMetrics) {
+      return {
+        success: false,
+        error: "No metadata found for the asset",
+        metrics: {
+          totalDuration: endTime - startTime,
+          signatureVerification: signatureEnd - signatureStart,
+          metadataReading: metadataEnd - metadataStart,
+          validationChecks: 0,
+          assetOwnershipVerification: assetVerificationEnd - assetVerificationStart
+        }
+      };
+    }
+    return { success: false, error: "No metadata found for the asset" };
   }
+  metadataEnd = performance.now();
 
   // Check if the sso version is supported
   validationStart = performance.now();
