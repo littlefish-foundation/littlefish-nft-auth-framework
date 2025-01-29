@@ -37,10 +37,61 @@ export default function Providers({children}) {
 };
 ```
 
-In your “app/layout.tsx” file import the Providers and wrap your {children} around the wallet provider.
+Since the wallet provider is a client side provider, we need to wrap it specifically in client side. Create a "ClientProviders.tsx" in your app directory.
 
-![Image 3](public/image3.png)
+```jsx
+"use client"`
 
+import Providers from "./Providers";
+import { useEffect, useState } from "react";
+
+const ClientProviders = ({ children }: { children: React.ReactNode }) => {
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  if (!hasMounted) {
+    return null;
+  }
+
+  return (
+    <Providers>
+      {children}
+    </Providers>
+  );
+};
+
+export default ClientProviders;
+```
+
+In your “app/layout.tsx” file import the ClientProviders and wrap your {children} around the wallet provider.
+
+```jsx
+import { Inter as FontSans } from "next/font/google";
+import "./globals.css";
+import ClientProviders from "./ClientProviders";
+
+const fontSans = FontSans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body className={`min-h-screen bg-background font-sans antialiased ${fontSans.variable}`}>
+          <ClientProviders>{children}</ClientProviders>
+      </body>
+    </html>
+  );
+}
+```
 
 Now you are ready to use the package.
 
